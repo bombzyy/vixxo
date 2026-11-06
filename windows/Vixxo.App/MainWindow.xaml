@@ -6,9 +6,9 @@
         xmlns:vm="clr-namespace:Vixxo.App.ViewModels"
         xmlns:audio="clr-namespace:Vixxo.Core.Audio;assembly=Vixxo.Core"
         mc:Ignorable="d"
-        Title="Vixxo — Android Microphone Receiver"
-        Height="820" Width="960"
-        MinHeight="720" MinWidth="850"
+        Title="Vixxo — Studio Virtual Microphone"
+        Height="840" Width="1000"
+        MinHeight="740" MinWidth="880"
         Background="{StaticResource BgBrush}"
         Foreground="{StaticResource TextPrimaryBrush}"
         WindowStartupLocation="CenterScreen"
@@ -21,47 +21,59 @@
     <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" /> <!-- Header -->
-            <RowDefinition Height="Auto" /> <!-- Missing VB-CABLE Alert -->
-            <RowDefinition Height="*" />    <!-- Main Content -->
-            <RowDefinition Height="Auto" /> <!-- Footer -->
+            <RowDefinition Height="Auto" /> <!-- Missing Driver Alert -->
+            <RowDefinition Height="*" />    <!-- Main Two-Column Studio Layout -->
+            <RowDefinition Height="Auto" /> <!-- Footer Status Bar -->
         </Grid.RowDefinitions>
 
-        <!-- HEADER -->
-        <Grid Grid.Row="0" Margin="0,0,0,18">
+        <!-- ========================================================= -->
+        <!-- 1. STUDIO HEADER                                          -->
+        <!-- ========================================================= -->
+        <Grid Grid.Row="0" Margin="0,0,0,20">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
+            <!-- Brand & Tagline -->
             <StackPanel Orientation="Vertical">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="Vixxo" FontSize="26" FontWeight="ExtraBold" Foreground="{StaticResource AccentBrush}" Margin="0,0,10,0" />
-                    <Border Background="#1E293B" CornerRadius="6" Padding="6,2" VerticalAlignment="Center">
-                        <TextBlock Text="v1.0.0" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" />
+                    <TextBlock Text="VIXXO" FontSize="26" FontWeight="Black" Foreground="{StaticResource AccentBrush}" Margin="0,0,10,0" />
+                    <Border Background="#1C2E4A" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1" CornerRadius="6" Padding="8,2" VerticalAlignment="Center" Margin="0,0,8,0">
+                        <TextBlock Text="STUDIO CORE" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" />
+                    </Border>
+                    <Border Background="#141E30" CornerRadius="6" Padding="6,2" VerticalAlignment="Center">
+                        <TextBlock Text="v1.0.0" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}" />
                     </Border>
                 </StackPanel>
-                <TextBlock Text="High-Fidelity Android to Windows Virtual Microphone" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0" />
+                <TextBlock Text="Ultra-Low Latency Lossless Audio Pipeline • 48 kHz 16-bit PCM" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,3,0,0" />
             </StackPanel>
 
-            <!-- Status Pill -->
+            <!-- Server Telemetry & Status Pill -->
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                <Border Background="#1E293B" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,6" Margin="0,0,12,0">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="PC IP: " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" />
-                        <TextBlock Text="{Binding PrimaryIpAddress}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" />
-                        <TextBlock Text=" : " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" />
-                        <TextBlock Text="{Binding ListenPort}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" />
+                <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,6" Margin="0,0,12,0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="PC IP: " FontSize="11" Foreground="{StaticResource TextMutedBrush}" />
+                        <TextBlock Text="{Binding PrimaryIpAddress}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" FontFamily="Consolas" />
+                        <TextBlock Text=" : " FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
+                        <TextBlock Text="{Binding ListenPort}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" FontFamily="Consolas" />
                     </StackPanel>
                 </Border>
 
+                <!-- Dynamic State Pill -->
                 <Border CornerRadius="8" Padding="14,6" Background="{Binding StatusColor}">
-                    <TextBlock Text="{Binding StatusText}" FontSize="12" FontWeight="ExtraBold" Foreground="#0F172A" />
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Ellipse Width="8" Height="8" Fill="#090D16" Margin="0,0,6,0" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding StatusText}" FontSize="11" FontWeight="Black" Foreground="#090D16" />
+                    </StackPanel>
                 </Border>
             </StackPanel>
         </Grid>
 
-        <!-- VB-CABLE MISSING WARNING BANNER -->
-        <Border Grid.Row="1" Background="#450A0A" BorderBrush="{StaticResource DangerBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10" Margin="0,0,0,16"
+        <!-- ========================================================= -->
+        <!-- 2. VB-CABLE DRIVER STATUS BANNER                          -->
+        <!-- ========================================================= -->
+        <Border Grid.Row="1" Background="#3B0D0D" BorderBrush="{StaticResource DangerBrush}" BorderThickness="1" CornerRadius="10" Padding="14,10" Margin="0,0,0,16"
                 Visibility="{Binding IsVbCableMissing, Converter={StaticResource BoolToVis}}">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -69,29 +81,34 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Vertical">
-                    <TextBlock Text="⚠️ VB-CABLE Virtual Microphone Driver Not Detected" FontWeight="Bold" Foreground="{StaticResource DangerBrush}" FontSize="14" />
-                    <TextBlock Text="Windows requires a virtual audio device to route phone audio into Discord, OBS, Zoom, and Teams." Foreground="#FECACA" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,0" />
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="⚠️" FontSize="14" Margin="0,0,6,0" />
+                        <TextBlock Text="VB-CABLE Virtual Audio Driver Missing" FontWeight="Bold" Foreground="{StaticResource DangerBrush}" FontSize="13" />
+                    </StackPanel>
+                    <TextBlock Text="Windows requires a virtual audio bridge to stream phone audio into Discord, OBS Studio, Zoom, and Teams." Foreground="#FECACA" FontSize="11" TextWrapping="Wrap" Margin="0,2,0,0" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Content="{Binding DriverInstallStatus}" Command="{Binding InstallDriverCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0" FontWeight="SemiBold" Padding="14,6" />
-                    <Button Content="Refresh" Command="{Binding RefreshDevicesCommand}" Style="{StaticResource OutlinedButtonStyle}" Padding="10,6" />
+                    <Button Content="{Binding DriverInstallStatus}" Command="{Binding InstallDriverCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0" FontWeight="Bold" Padding="14,6" FontSize="12" />
+                    <Button Content="Refresh" Command="{Binding RefreshDevicesCommand}" Style="{StaticResource OutlinedButtonStyle}" Padding="10,6" FontSize="11" />
                 </StackPanel>
             </Grid>
         </Border>
 
-        <!-- MAIN TWO-COLUMN CONTENT -->
+        <!-- ========================================================= -->
+        <!-- 3. MAIN TWO-COLUMN STUDIO CONSOLE                         -->
+        <!-- ========================================================= -->
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1.2*" />
+                <ColumnDefinition Width="1.25*" />
                 <ColumnDefinition Width="20" />
                 <ColumnDefinition Width="1*" />
             </Grid.ColumnDefinitions>
 
-            <!-- LEFT COLUMN -->
+            <!-- LEFT COLUMN: AUDIO ENGINE & DSP -->
             <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
-                <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Vertical" Margin="0,0,4,0">
 
-                    <!-- VIRTUAL AUDIO ROUTING CARD -->
+                    <!-- VIRTUAL MICROPHONE ROUTING CARD -->
                     <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,16">
                         <StackPanel Orientation="Vertical">
                             <Grid Margin="0,0,0,10">
@@ -99,32 +116,31 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="Virtual Microphone Routing" FontWeight="Bold" FontSize="15" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
-                                <Button Grid.Column="1" Content="Refresh" Command="{Binding RefreshDevicesCommand}" Style="{StaticResource OutlinedButtonStyle}" Padding="10,4" FontSize="11" />
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="🎛️" FontSize="14" Margin="0,0,6,0" />
+                                    <TextBlock Text="Virtual Microphone Routing" FontWeight="Bold" FontSize="14" Foreground="{StaticResource TextPrimaryBrush}" />
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="Refresh" Command="{Binding RefreshDevicesCommand}" Style="{StaticResource OutlinedButtonStyle}" Padding="8,3" FontSize="11" />
                             </Grid>
 
-                            <TextBlock Text="Phone audio is played into this virtual endpoint:" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6" />
+                            <TextBlock Text="Destination Virtual Audio Endpoint (WASAPI Shared Mode):" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6" />
                             
                             <ComboBox ItemsSource="{Binding PlaybackDevices}"
                                       SelectedItem="{Binding SelectedPlaybackDevice}"
                                       DisplayMemberPath="Name"
                                       Padding="10,8"
-                                      Background="#0F172A"
-                                      Foreground="{StaticResource TextPrimaryBrush}"
-                                      BorderBrush="{StaticResource BorderBrush}"
-                                      FontSize="13"
                                       Margin="0,0,0,10" />
 
-                            <Border Background="#0F172A" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8">
+                            <Border Background="{StaticResource SurfaceSubtleBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,8">
                                 <StackPanel Orientation="Vertical">
-                                    <TextBlock Text="💡 How to use in Discord, Zoom, Teams, OBS:" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" Margin="0,0,0,2" />
-                                    <TextBlock Text="Set your microphone / input device in those apps to: 'CABLE Output (VB-Audio Virtual Cable)'." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                                    <TextBlock Text="💡 Discord / OBS / Zoom Setup:" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" Margin="0,0,0,2" />
+                                    <TextBlock Text="In your voice settings, select 'CABLE Output (VB-Audio Virtual Cable)' as your Input Device / Microphone." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
                                 </StackPanel>
                             </Border>
                         </StackPanel>
                     </Border>
 
-                    <!-- LIVE AUDIO VU METER CARD -->
+                    <!-- STUDIO HARDWARE VU METER CARD -->
                     <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,16">
                         <StackPanel Orientation="Vertical">
                             <Grid Margin="0,0,0,8">
@@ -132,30 +148,33 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="Live Audio Level (CABLE Input)" FontWeight="Bold" FontSize="15" Foreground="{StaticResource TextPrimaryBrush}" />
-                                <TextBlock Grid.Column="1" Text="{Binding PeakDbText}" FontWeight="Bold" FontSize="14" Foreground="{StaticResource AccentBrush}" />
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="📊" FontSize="14" Margin="0,0,6,0" />
+                                    <TextBlock Text="Live Studio VU Meter" FontWeight="Bold" FontSize="14" Foreground="{StaticResource TextPrimaryBrush}" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="1" Text="{Binding PeakDbText}" FontWeight="Black" FontSize="15" Foreground="{StaticResource AccentBrush}" FontFamily="Consolas" />
                             </Grid>
 
-                            <!-- VU Meter Bar Container -->
-                            <Border Background="#0F172A" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Height="26" Margin="0,0,0,6">
+                            <!-- Segmented Multi-Color Meter Bar -->
+                            <Border Background="#090D16" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Height="28" Margin="0,0,0,6" Padding="2">
                                 <Grid>
-                                    <!-- Dynamic Meter Bar -->
+                                    <!-- Dynamic Meter Bar with Multi-Color LED Gradient -->
                                     <ProgressBar Value="{Binding PeakLevel, Mode=OneWay}" Minimum="0.0" Maximum="1.0"
                                                  Background="Transparent"
                                                  BorderThickness="0"
-                                                 Foreground="{StaticResource AccentBrush}" />
+                                                 Foreground="{StaticResource VuMeterGradient}" />
 
-                                    <!-- RMS Level Indicator -->
+                                    <!-- RMS Level Overlay Indicator -->
                                     <ProgressBar Value="{Binding RmsLevel, Mode=OneWay}" Minimum="0.0" Maximum="1.0"
                                                  Background="Transparent"
                                                  BorderThickness="0"
                                                  Opacity="0.4"
-                                                 Foreground="{StaticResource SuccessBrush}" />
+                                                 Foreground="{StaticResource AccentBrush}" />
                                 </Grid>
                             </Border>
 
-                            <!-- Decibel Scale Labels -->
-                            <Grid Margin="2,0,2,8">
+                            <!-- Decibel Scale Legend -->
+                            <Grid Margin="4,0,4,8">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="*" />
@@ -163,27 +182,33 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="-48 dB" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Left" />
-                                <TextBlock Grid.Column="1" Text="-24 dB" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" />
-                                <TextBlock Grid.Column="2" Text="-12 dB" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" />
-                                <TextBlock Grid.Column="3" Text="-6 dB" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" />
-                                <TextBlock Grid.Column="4" Text="0 dB" FontSize="10" FontWeight="Bold" Foreground="{StaticResource DangerBrush}" HorizontalAlignment="Right" />
+                                <TextBlock Text="-48 dB" FontSize="9" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Left" />
+                                <TextBlock Grid.Column="1" Text="-24 dB" FontSize="9" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" />
+                                <TextBlock Grid.Column="2" Text="-12 dB" FontSize="9" Foreground="{StaticResource SuccessBrush}" HorizontalAlignment="Center" />
+                                <TextBlock Grid.Column="3" Text="-6 dB" FontSize="9" Foreground="{StaticResource WarningBrush}" HorizontalAlignment="Center" />
+                                <TextBlock Grid.Column="4" Text="0 dB CLIP" FontSize="9" FontWeight="Bold" Foreground="{StaticResource DangerBrush}" HorizontalAlignment="Right" />
                             </Grid>
 
-                            <TextBlock Text="{Binding BufferDepthMs, StringFormat='Buffer Depth: {0:F0} ms'}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Right" />
+                            <Grid>
+                                <TextBlock Text="Jitter Buffer Health: Normal" FontSize="11" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding BufferDepthMs, StringFormat='Buffer Depth: {0:F0} ms'}" FontSize="11" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="Consolas" />
+                            </Grid>
                         </StackPanel>
                     </Border>
 
-                    <!-- AUDIO CONTROLS CARD -->
+                    <!-- AUDIO CONTROLS & DSP FILTERS CARD -->
                     <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,16">
                         <StackPanel Orientation="Vertical">
-                            <TextBlock Text="Audio Controls" FontWeight="Bold" FontSize="15" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,12" />
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,14">
+                                <TextBlock Text="⚡" FontSize="14" Margin="0,0,6,0" />
+                                <TextBlock Text="DSP Audio Processing &amp; Filters" FontWeight="Bold" FontSize="14" Foreground="{StaticResource TextPrimaryBrush}" />
+                            </StackPanel>
 
                             <!-- MUTE BUTTON -->
                             <Button Command="{Binding ToggleMuteCommand}"
                                     Content="{Binding MuteButtonText}"
                                     Style="{StaticResource PrimaryButtonStyle}"
-                                    Height="44"
+                                    Height="42"
                                     Margin="0,0,0,14" />
 
                             <!-- OUTPUT GAIN SLIDER -->
@@ -192,43 +217,43 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="Output Gain" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" />
-                                <TextBlock Grid.Column="1" Text="{Binding GainText}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" />
+                                <TextBlock Text="Software Output Gain:" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" />
+                                <TextBlock Grid.Column="1" Text="{Binding GainText}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" FontFamily="Consolas" />
                             </Grid>
 
                             <Slider Minimum="0.0" Maximum="18.0" Value="{Binding GainDb}" TickFrequency="3.0" IsSnapToTickEnabled="False" Margin="0,0,0,14" />
 
                             <!-- LIMITER TOGGLE -->
                             <CheckBox IsChecked="{Binding IsLimiterEnabled}" Margin="0,0,0,10">
-                                <TextBlock Text="Enable Soft-Knee Limiter (Prevents Digital Clipping)" Foreground="{StaticResource TextPrimaryBrush}" FontSize="12" />
+                                <TextBlock Text="Soft-Knee Peak Limiter (Prevents Digital Clipping)" Foreground="{StaticResource TextPrimaryBrush}" FontSize="12" />
                             </CheckBox>
 
                             <!-- DSP PROCESSING: HPF & NOISE GATE -->
                             <CheckBox IsChecked="{Binding IsHighPassFilterEnabled}" Margin="0,0,0,10">
-                                <TextBlock Text="Enable 80 Hz High-Pass Filter (Rumble Rejection)" Foreground="{StaticResource TextPrimaryBrush}" FontSize="12" />
+                                <TextBlock Text="80 Hz High-Pass Filter (Desk Rumble &amp; AC Hum Rejection)" Foreground="{StaticResource TextPrimaryBrush}" FontSize="12" />
                             </CheckBox>
 
                             <CheckBox IsChecked="{Binding IsNoiseGateEnabled}" Margin="0,0,0,4">
-                                <TextBlock Text="Enable Noise Gate (Room Hiss Rejection)" Foreground="{StaticResource TextPrimaryBrush}" FontSize="12" />
+                                <TextBlock Text="Dynamic Noise Gate (Silences Room Hiss &amp; Keyboard Clicks)" Foreground="{StaticResource TextPrimaryBrush}" FontSize="12" />
                             </CheckBox>
 
-                            <Grid Margin="18,0,0,14" IsEnabled="{Binding IsNoiseGateEnabled}">
+                            <Grid Margin="26,0,0,14" IsEnabled="{Binding IsNoiseGateEnabled}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <Slider Grid.Column="0" Minimum="-60.0" Maximum="-20.0" Value="{Binding NoiseGateThresholdDb}" TickFrequency="5.0" IsSnapToTickEnabled="False" VerticalAlignment="Center" />
-                                <TextBlock Grid.Column="1" Text="{Binding NoiseGateThresholdText}" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="{Binding NoiseGateThresholdText}" FontSize="11" Foreground="{StaticResource AccentBrush}" Margin="8,0,0,0" VerticalAlignment="Center" FontFamily="Consolas" />
                             </Grid>
 
                             <!-- LATENCY PROFILE -->
-                            <TextBlock Text="Latency Profile:" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6" />
+                            <TextBlock Text="Buffer Latency Mode:" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,8" />
                             <UniformGrid Columns="3">
-                                <RadioButton Content="Low (40ms)" GroupName="Latency" Margin="0,0,4,0" Foreground="{StaticResource TextPrimaryBrush}"
+                                <RadioButton Content="Ultra-Low (40ms)" GroupName="Latency" Margin="0,0,4,0"
                                              IsChecked="{Binding SelectedLatencyMode, ConverterParameter={x:Static audio:LatencyMode.Low}}" />
-                                <RadioButton Content="Balanced (80ms)" GroupName="Latency" Margin="0,0,4,0" Foreground="{StaticResource TextPrimaryBrush}"
+                                <RadioButton Content="Balanced (80ms)" GroupName="Latency" Margin="0,0,4,0"
                                              IsChecked="{Binding SelectedLatencyMode, ConverterParameter={x:Static audio:LatencyMode.Balanced}}" />
-                                <RadioButton Content="Stable (140ms)" GroupName="Latency" Foreground="{StaticResource TextPrimaryBrush}"
+                                <RadioButton Content="Stable (140ms)" GroupName="Latency"
                                              IsChecked="{Binding SelectedLatencyMode, ConverterParameter={x:Static audio:LatencyMode.Stable}}" />
                             </UniformGrid>
                         </StackPanel>
@@ -237,51 +262,57 @@
                     <!-- SELF-TEST VIRTUAL MICROPHONE CARD -->
                     <Border Style="{StaticResource CardBorderStyle}">
                         <StackPanel Orientation="Vertical">
-                            <TextBlock Text="Virtual Microphone Self-Test" FontWeight="Bold" FontSize="15" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,8" />
-                            <TextBlock Text="Play a 2-second safe 440 Hz test tone into CABLE Input to verify that other applications hear the audio:" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,10" />
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,6">
+                                <TextBlock Text="🔊" FontSize="14" Margin="0,0,6,0" />
+                                <TextBlock Text="Virtual Microphone Loopback Test" FontWeight="Bold" FontSize="14" Foreground="{StaticResource TextPrimaryBrush}" />
+                            </StackPanel>
+                            <TextBlock Text="Play a 2-second safe 440 Hz test tone into CABLE Input to verify other applications hear your audio:" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,10" />
 
-                            <Button Content="🔊 Test Virtual Microphone"
+                            <Button Content="Play Test Tone (440 Hz)"
                                     Command="{Binding StartSelfTestCommand}"
                                     Style="{StaticResource OutlinedButtonStyle}"
                                     HorizontalAlignment="Left"
-                                    Padding="16,8"
+                                    Padding="14,6"
                                     Margin="0,0,0,8" />
 
-                            <TextBlock Text="{Binding TestStatusMessage}" FontSize="12" Foreground="{StaticResource WarningBrush}" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding TestStatusMessage}" FontSize="11" Foreground="{StaticResource WarningBrush}" TextWrapping="Wrap" />
                         </StackPanel>
                     </Border>
 
                 </StackPanel>
             </ScrollViewer>
 
-            <!-- RIGHT COLUMN -->
+            <!-- RIGHT COLUMN: CONNECTION & TELEMETRY -->
             <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
-                <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Vertical" Margin="0,0,4,0">
 
                     <!-- CONNECTED PHONE CARD -->
                     <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,16">
                         <StackPanel Orientation="Vertical">
-                            <TextBlock Text="Phone Connection" FontWeight="Bold" FontSize="15" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,10" />
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,10">
+                                <TextBlock Text="📱" FontSize="14" Margin="0,0,6,0" />
+                                <TextBlock Text="Phone Connection" FontWeight="Bold" FontSize="14" Foreground="{StaticResource TextPrimaryBrush}" />
+                            </StackPanel>
 
-                            <Border Background="#0F172A" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                            <Border Background="{StaticResource SurfaceSubtleBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,12">
                                 <StackPanel Orientation="Vertical">
-                                    <TextBlock Text="Connected Device:" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" />
-                                    <TextBlock Text="{Binding ConnectedClient}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" Margin="0,2,0,6" />
+                                    <TextBlock Text="Active Phone Client:" FontSize="10" Foreground="{StaticResource TextMutedBrush}" />
+                                    <TextBlock Text="{Binding ConnectedClient}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" Margin="0,2,0,4" />
 
                                     <TextBlock Text="{Binding ConnectedClientInfo}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,8" />
 
-                                    <Grid Margin="0,4,0,0">
+                                    <Grid Margin="0,2,0,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Orientation="Vertical">
-                                            <TextBlock Text="Network RTT:" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" />
-                                            <TextBlock Text="{Binding RttMs, StringFormat='{}{0:F1} ms'}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" />
+                                            <TextBlock Text="Round-Trip Ping:" FontSize="10" Foreground="{StaticResource TextMutedBrush}" />
+                                            <TextBlock Text="{Binding RttMs, StringFormat='{}{0:F1} ms'}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource SuccessBrush}" FontFamily="Consolas" />
                                         </StackPanel>
                                         <StackPanel Grid.Column="1" Orientation="Vertical">
-                                            <TextBlock Text="Frames Streamed:" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" />
-                                            <TextBlock Text="{Binding FramesReceived}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" />
+                                            <TextBlock Text="Frames Streamed:" FontSize="10" Foreground="{StaticResource TextMutedBrush}" />
+                                            <TextBlock Text="{Binding FramesReceived}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" FontFamily="Consolas" />
                                         </StackPanel>
                                     </Grid>
                                 </StackPanel>
@@ -300,71 +331,78 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="USB Streaming (ADB Reverse)" FontWeight="Bold" FontSize="15" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
-                                <Button Grid.Column="1" Content="Refresh" Command="{Binding RefreshUsbDevicesCommand}" Style="{StaticResource OutlinedButtonStyle}" Padding="10,4" FontSize="11" />
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="⚡" FontSize="14" Margin="0,0,6,0" />
+                                    <TextBlock Text="USB Streaming (Sub-5ms)" FontWeight="Bold" FontSize="14" Foreground="{StaticResource TextPrimaryBrush}" />
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="Refresh" Command="{Binding RefreshUsbDevicesCommand}" Style="{StaticResource OutlinedButtonStyle}" Padding="8,3" FontSize="11" />
                             </Grid>
 
-                            <Border Background="#0F172A" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                            <Border Background="{StaticResource SurfaceSubtleBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,8">
                                 <StackPanel Orientation="Vertical">
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                        <Ellipse Width="10" Height="10" Fill="{Binding UsbStatusColor}" VerticalAlignment="Center" Margin="0,0,8,0" />
-                                        <TextBlock Text="USB Status:" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" />
+                                        <Ellipse Width="8" Height="8" Fill="{Binding UsbStatusColor}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                        <TextBlock Text="USB Tunnel Status:" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" />
                                     </StackPanel>
-                                    <TextBlock Text="{Binding UsbStatusText}" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding UsbStatusText}" FontSize="11" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" />
                                 </StackPanel>
                             </Border>
 
-                            <TextBlock Text="💡 For ultra-low latency without Wi-Fi: connect your phone with USB Debugging enabled, and select 'USB Mode' on your phone to stream through the cable." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            <TextBlock Text="💡 For lowest latency: connect phone via USB with USB Debugging enabled, then tap 'USB' on phone to bypass Wi-Fi." FontSize="11" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" />
                         </StackPanel>
                     </Border>
 
                     <!-- LOCAL HEADPHONE MONITORING CARD -->
                     <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,16">
                         <StackPanel Orientation="Vertical">
-                            <TextBlock Text="Local Headphone Monitor" FontWeight="Bold" FontSize="15" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,6" />
-                            <TextBlock Text="Listen to your own voice in real time for quality checking:" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,10" />
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,6">
+                                <TextBlock Text="🎧" FontSize="14" Margin="0,0,6,0" />
+                                <TextBlock Text="Real-Time Headphone Monitor" FontWeight="Bold" FontSize="14" Foreground="{StaticResource TextPrimaryBrush}" />
+                            </StackPanel>
+                            <TextBlock Text="Listen to your own voice in real time to monitor audio clarity:" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,8" />
 
                             <CheckBox IsChecked="{Binding IsMonitoringEnabled}" Margin="0,0,0,10">
-                                <TextBlock Text="Enable Local Monitoring" Foreground="{StaticResource TextPrimaryBrush}" FontSize="13" FontWeight="SemiBold" />
+                                <TextBlock Text="Enable Local Headphone Monitoring" Foreground="{StaticResource TextPrimaryBrush}" FontSize="12" FontWeight="SemiBold" />
                             </CheckBox>
 
-                            <TextBlock Text="Monitor Endpoint (Headphones):" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4" />
+                            <TextBlock Text="Monitoring Device (Headphones):" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4" />
                             <ComboBox ItemsSource="{Binding MonitoringDevices}"
                                       SelectedItem="{Binding SelectedMonitoringDevice}"
                                       DisplayMemberPath="Name"
                                       Padding="10,6"
-                                      Background="#0F172A"
-                                      Foreground="{StaticResource TextPrimaryBrush}"
-                                      BorderBrush="{StaticResource BorderBrush}"
-                                      FontSize="12"
-                                      Margin="0,0,0,10" />
+                                      FontSize="11"
+                                      Margin="0,0,0,8" />
 
-                            <Border Background="#1C1917" BorderBrush="{StaticResource WarningBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8">
-                                <TextBlock Text="⚠️ Use headphones only. Never monitor through PC speakers when your phone is nearby to avoid acoustic feedback loops." FontSize="11" Foreground="{StaticResource WarningBrush}" TextWrapping="Wrap" />
+                            <Border Background="#251206" BorderBrush="{StaticResource WarningBrush}" BorderThickness="1" CornerRadius="6" Padding="8,6">
+                                <TextBlock Text="⚠️ Always use headphones. Never monitor through speakers to prevent loud feedback screeching." FontSize="10" Foreground="{StaticResource WarningBrush}" TextWrapping="Wrap" />
                             </Border>
                         </StackPanel>
                     </Border>
 
-                    <!-- SERVER CONFIGURATION CARD -->
+                    <!-- SERVER NETWORK CONFIGURATION CARD -->
                     <Border Style="{StaticResource CardBorderStyle}">
                         <StackPanel Orientation="Vertical">
-                            <TextBlock Text="Server Configuration" FontWeight="Bold" FontSize="15" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,10" />
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,8">
+                                <TextBlock Text="🌐" FontSize="14" Margin="0,0,6,0" />
+                                <TextBlock Text="Server Network Configuration" FontWeight="Bold" FontSize="14" Foreground="{StaticResource TextPrimaryBrush}" />
+                            </StackPanel>
 
-                            <TextBlock Text="TCP Listen Port:" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4" />
+                            <TextBlock Text="TCP Listen Port:" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4" />
                             <TextBox Text="{Binding ListenPort, UpdateSourceTrigger=PropertyChanged}"
-                                     Background="#0F172A"
+                                     Background="{StaticResource SurfaceSubtleBrush}"
                                      Foreground="{StaticResource TextPrimaryBrush}"
                                      BorderBrush="{StaticResource BorderBrush}"
-                                     Padding="8,6"
-                                     FontSize="13"
-                                     Margin="0,0,0,12" />
+                                     Padding="8,5"
+                                     FontSize="12"
+                                     FontFamily="Consolas"
+                                     Margin="0,0,0,10" />
 
-                            <TextBlock Text="Available PC Network Addresses:" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4" />
+                            <TextBlock Text="PC Local Network Interfaces:" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4" />
                             <ItemsControl ItemsSource="{Binding LocalIpAddresses}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Background="#0F172A" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="8,4" Margin="0,0,0,4">
-                                            <TextBlock Text="{Binding}" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" FontFamily="Consolas" />
+                                        <Border Background="{StaticResource SurfaceSubtleBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="8,3" Margin="0,0,0,4">
+                                            <TextBlock Text="{Binding}" FontSize="11" Foreground="{StaticResource AccentBrush}" FontFamily="Consolas" />
                                         </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
@@ -376,11 +414,16 @@
             </ScrollViewer>
         </Grid>
 
-        <!-- FOOTER -->
+        <!-- ========================================================= -->
+        <!-- 4. FOOTER STATUS BAR                                      -->
+        <!-- ========================================================= -->
         <Border Grid.Row="3" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,12,0,0" Margin="0,14,0,0">
             <Grid>
-                <TextBlock Text="Vixxo Audio Engine • 48 kHz 16-bit Mono PCM • VB-CABLE Shared WASAPI" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
-                <TextBlock Text="Close window to minimize to tray" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="●" FontSize="10" Foreground="{StaticResource SuccessBrush}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                    <TextBlock Text="Vixxo Audio Engine 48 kHz / 16-bit PCM • WASAPI Shared Mode • End-to-End TLS 1.3" FontSize="11" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" />
+                </StackPanel>
+                <TextBlock Text="Minimizes to System Tray on close" FontSize="11" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" />
             </Grid>
         </Border>
 

@@ -1,7 +1,12 @@
 package com.vixxo.mic.ui
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,10 +17,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
@@ -24,6 +33,7 @@ import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Usb
+import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -31,7 +41,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -49,14 +58,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vixxo.mic.R
 import com.vixxo.mic.discovery.DiscoveredServer
 import com.vixxo.mic.service.StreamState
+import kotlin.math.sin
 
 @Composable
 fun StreamScreen(
@@ -96,7 +111,7 @@ fun StreamScreen(
                 hostText = json.optString("host", hostText)
                 portText = json.optInt("port", portText.toIntOrNull() ?: 47800).toString()
                 pinText = json.optString("pin", json.optString("token", ""))
-                pinnedFingerprint = json.optString("fp", null)
+                pinnedFingerprint = if (json.has("fp")) json.getString("fp") else null
             } catch (_: Exception) {}
         }
     }
@@ -120,125 +135,355 @@ fun StreamScreen(
         StreamState.ERROR -> stringResource(R.string.stream_status_error)
     }
 
+    val isStreaming = streamState == StreamState.STREAMING
+    val isConnecting = streamState == StreamState.CONNECTING
+    val isUsbMode = hostText == "127.0.0.1"
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(VixxoBackground)
-            .padding(20.dp),
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // App Header
+        // =========================================================
+        // 1. APP HEADER & STATUS PILL
+        // =========================================================
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                text = "Vixxo",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = VixxoAccent
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "VIXXO",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Black,
+                    color = VixxoAccent,
+                    letterSpacing = 1.5.sp
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(VixxoSurfaceElevated)
+                        .border(1.dp, VixxoBorder, RoundedCornerShape(6.dp))
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = "STUDIO",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = VixxoTextSecondary
+                    )
+                }
+            }
 
-            // Status Pill
+            // Dynamic State Badge with glowing dot
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(statusColor.copy(alpha = 0.2f))
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(statusColor.copy(alpha = 0.15f))
+                    .border(1.dp, statusColor.copy(alpha = 0.4f), RoundedCornerShape(20.dp))
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
-                Text(
-                    text = statusText,
-                    color = statusColor,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(statusColor)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = statusText.uppercase(),
+                        color = statusColor,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 0.5.sp
+                    )
+                }
             }
         }
 
-        // Connection Card
+        // =========================================================
+        // 2. HERO REAL-TIME AUDIO VISUALIZER CARD
+        // =========================================================
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = VixxoSurface),
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(18.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, VixxoBorder)
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "🎙️",
+                            fontSize = 14.sp
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Microphone Signal",
+                            color = VixxoTextSecondary,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+
+                    Text(
+                        text = when {
+                            isMuted -> "MUTED"
+                            isStreaming || isLocalTesting -> "${(micLevel * 100).toInt()}%"
+                            else -> "STANDBY"
+                        },
+                        color = when {
+                            isMuted -> VixxoError
+                            micLevel > 0.85f -> VixxoError
+                            isStreaming || isLocalTesting -> VixxoAccent
+                            else -> VixxoTextMuted
+                        },
+                        fontSize = 13.sp,
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // Studio Multi-Segment Equalizer Canvas
+                val animatedLevel by animateFloatAsState(
+                    targetValue = if (isMuted) 0f else micLevel,
+                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                    label = "micLevelAnim"
+                )
+
+                StudioVisualizerCanvas(
+                    level = animatedLevel,
+                    isActive = isStreaming || isLocalTesting,
+                    isMuted = isMuted,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                )
+
+                // Subtitle specs row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "48 kHz • 16-bit Mono PCM",
+                        fontSize = 10.sp,
+                        color = VixxoTextMuted
+                    )
+                    Text(
+                        text = if (isUsbMode) "USB Sub-5ms Loopback" else "Wi-Fi UDP Beacon",
+                        fontSize = 10.sp,
+                        color = if (isUsbMode) VixxoAccent else VixxoTextMuted
+                    )
+                }
+            }
+        }
+
+        // =========================================================
+        // 3. TRANSPORT MODE QUICK SELECTOR (USB / WI-FI / QR)
+        // =========================================================
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Mode 1: USB (Ultra Low Latency)
+            val usbSelected = isUsbMode
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(if (usbSelected) VixxoAccent.copy(alpha = 0.15f) else VixxoSurface)
+                    .border(
+                        1.dp,
+                        if (usbSelected) VixxoAccent else VixxoBorder,
+                        RoundedCornerShape(12.dp)
+                    )
+                    .clickable(enabled = !isStreaming && !isConnecting) {
+                        hostText = "127.0.0.1"
+                        portText = "47800"
+                    }
+                    .padding(vertical = 12.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.Usb,
+                        contentDescription = "USB",
+                        tint = if (usbSelected) VixxoAccent else VixxoTextSecondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "USB Mode",
+                        fontSize = 11.sp,
+                        fontWeight = if (usbSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (usbSelected) VixxoAccent else VixxoTextSecondary
+                    )
+                }
+            }
+
+            // Mode 2: Wi-Fi Discovery
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(VixxoSurface)
+                    .border(1.dp, VixxoBorder, RoundedCornerShape(12.dp))
+                    .clickable(enabled = !isStreaming && !isConnecting) {
+                        onDiscoverClick()
+                        showDiscoveryDialog = true
+                    }
+                    .padding(vertical = 12.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.Wifi,
+                        contentDescription = "Wi-Fi",
+                        tint = VixxoTextSecondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Find PC",
+                        fontSize = 11.sp,
+                        color = VixxoTextSecondary
+                    )
+                }
+            }
+
+            // Mode 3: Scan QR
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(VixxoSurface)
+                    .border(1.dp, VixxoBorder, RoundedCornerShape(12.dp))
+                    .clickable(enabled = !isStreaming && !isConnecting) {
+                        onScanQrClick()
+                    }
+                    .padding(vertical = 12.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.QrCodeScanner,
+                        contentDescription = "Scan QR",
+                        tint = VixxoTextSecondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Scan QR",
+                        fontSize = 11.sp,
+                        color = VixxoTextSecondary
+                    )
+                }
+            }
+        }
+
+        // =========================================================
+        // 4. LIVE TELEMETRY CARD (WHEN STREAMING)
+        // =========================================================
+        if (isStreaming) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = VixxoSurfaceElevated),
+                shape = RoundedCornerShape(16.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, VixxoBorderLight)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Active Stream Telemetry",
+                            color = VixxoAccent,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = if (isUsbMode) "< 5 ms (USB)" else "LAN Wi-Fi",
+                            color = VixxoSuccess,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text("TARGET SERVER", fontSize = 10.sp, color = VixxoTextMuted)
+                            Text(serverName.ifEmpty { "$hostText:$portText" }, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = VixxoTextPrimary)
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text("FRAMES SENT", fontSize = 10.sp, color = VixxoTextMuted)
+                            Text("$framesSent (${framesSent * 20 / 1000}s)", fontSize = 13.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, color = VixxoTextPrimary)
+                        }
+                    }
+                }
+            }
+        }
+
+        // =========================================================
+        // 5. CONNECTION PARAMETERS CARD
+        // =========================================================
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = VixxoSurface),
+            shape = RoundedCornerShape(16.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, VixxoBorder)
         ) {
             Column(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "Windows PC Connection",
+                    text = "Connection Endpoint",
                     color = VixxoTextPrimary,
-                    fontSize = 15.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )
-
-                // Quick Action Buttons: Scan QR, Discover LAN, & USB Mode
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = onScanQrClick,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(10.dp),
-                        enabled = streamState == StreamState.IDLE
-                    ) {
-                        Icon(Icons.Default.QrCodeScanner, contentDescription = null, tint = VixxoAccent)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("QR", color = VixxoTextPrimary, fontSize = 12.sp)
-                    }
-
-                    OutlinedButton(
-                        onClick = {
-                            onDiscoverClick()
-                            showDiscoveryDialog = true
-                        },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(10.dp),
-                        enabled = streamState == StreamState.IDLE
-                    ) {
-                        Icon(Icons.Default.Search, contentDescription = null, tint = VixxoAccent)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Wi-Fi", color = VixxoTextPrimary, fontSize = 12.sp)
-                    }
-
-                    OutlinedButton(
-                        onClick = {
-                            hostText = "127.0.0.1"
-                            portText = "47800"
-                        },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(10.dp),
-                        enabled = streamState == StreamState.IDLE,
-                        colors = if (hostText == "127.0.0.1") ButtonDefaults.outlinedButtonColors(containerColor = VixxoAccent.copy(alpha = 0.15f)) else ButtonDefaults.outlinedButtonColors()
-                    ) {
-                        Icon(Icons.Default.Usb, contentDescription = null, tint = VixxoAccent)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("USB", color = VixxoTextPrimary, fontSize = 12.sp)
-                    }
-                }
-
-                if (hostText == "127.0.0.1") {
-                    Text("⚡ USB Mode selected (adb reverse 127.0.0.1)", color = VixxoAccent, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-                }
 
                 // IP and Port
                 Row(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
                         value = hostText,
                         onValueChange = { hostText = it },
-                        label = { Text(stringResource(R.string.field_server_ip), fontSize = 12.sp) },
+                        label = { Text("PC IP Address", fontSize = 11.sp) },
                         modifier = Modifier.weight(0.7f),
-                        enabled = streamState == StreamState.IDLE,
+                        enabled = !isStreaming && !isConnecting,
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = VixxoAccent,
-                            unfocusedBorderColor = VixxoTextSecondary.copy(alpha = 0.4f),
+                            unfocusedBorderColor = VixxoBorder,
                             focusedTextColor = VixxoTextPrimary,
-                            unfocusedTextColor = VixxoTextPrimary
-                        )
+                            unfocusedTextColor = VixxoTextPrimary,
+                            focusedContainerColor = VixxoSurfaceSubtle,
+                            unfocusedContainerColor = VixxoSurfaceSubtle
+                        ),
+                        shape = RoundedCornerShape(10.dp)
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))
@@ -246,16 +491,19 @@ fun StreamScreen(
                     OutlinedTextField(
                         value = portText,
                         onValueChange = { portText = it },
-                        label = { Text(stringResource(R.string.field_server_port), fontSize = 12.sp) },
+                        label = { Text("Port", fontSize = 11.sp) },
                         modifier = Modifier.weight(0.3f),
-                        enabled = streamState == StreamState.IDLE,
+                        enabled = !isStreaming && !isConnecting,
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = VixxoAccent,
-                            unfocusedBorderColor = VixxoTextSecondary.copy(alpha = 0.4f),
+                            unfocusedBorderColor = VixxoBorder,
                             focusedTextColor = VixxoTextPrimary,
-                            unfocusedTextColor = VixxoTextPrimary
-                        )
+                            unfocusedTextColor = VixxoTextPrimary,
+                            focusedContainerColor = VixxoSurfaceSubtle,
+                            unfocusedContainerColor = VixxoSurfaceSubtle
+                        ),
+                        shape = RoundedCornerShape(10.dp)
                     )
                 }
 
@@ -263,86 +511,40 @@ fun StreamScreen(
                 OutlinedTextField(
                     value = pinText,
                     onValueChange = { pinText = it },
-                    label = { Text("6-digit PIN (Optional if already paired)", fontSize = 12.sp) },
+                    label = { Text("6-Digit PIN (Optional if already paired)", fontSize = 11.sp) },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = streamState == StreamState.IDLE,
+                    enabled = !isStreaming && !isConnecting,
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = VixxoAccent,
-                        unfocusedBorderColor = VixxoTextSecondary.copy(alpha = 0.4f),
+                        unfocusedBorderColor = VixxoBorder,
                         focusedTextColor = VixxoTextPrimary,
-                        unfocusedTextColor = VixxoTextPrimary
-                    )
+                        unfocusedTextColor = VixxoTextPrimary,
+                        focusedContainerColor = VixxoSurfaceSubtle,
+                        unfocusedContainerColor = VixxoSurfaceSubtle
+                    ),
+                    shape = RoundedCornerShape(10.dp)
                 )
 
                 if (!errorMessage.isNullOrBlank()) {
                     Text(
-                        text = errorMessage,
+                        text = "⚠️ $errorMessage",
                         color = VixxoError,
-                        fontSize = 13.sp
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
         }
 
-        // Live Audio Level Meter
+        // =========================================================
+        // 6. SOFTWARE GAIN SLIDER CARD
+        // =========================================================
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = VixxoSurface),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = stringResource(R.string.label_mic_level),
-                        color = VixxoTextSecondary,
-                        fontSize = 14.sp
-                    )
-                    Text(
-                        text = if (isMuted) "MUTED" else "${(micLevel * 100).toInt()}%",
-                        color = if (isMuted) VixxoError else VixxoAccent,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                LinearProgressIndicator(
-                    progress = { if (isMuted) 0f else micLevel },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(10.dp)
-                        .clip(RoundedCornerShape(5.dp)),
-                    color = if (micLevel > 0.85f) VixxoWarning else VixxoAccent,
-                    trackColor = VixxoBackground
-                )
-
-                if (streamState == StreamState.STREAMING) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Connected to: $serverName",
-                        color = VixxoTextPrimary,
-                        fontSize = 13.sp
-                    )
-                    Text(
-                        text = "Frames Sent: $framesSent (${framesSent * 20 / 1000}s)",
-                        color = VixxoTextSecondary,
-                        fontSize = 12.sp
-                    )
-                }
-            }
-        }
-
-        // Software Gain Slider
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = VixxoSurface),
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(16.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, VixxoBorder)
         ) {
             Column(
                 modifier = Modifier.padding(16.dp),
@@ -350,17 +552,20 @@ fun StreamScreen(
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = stringResource(R.string.label_gain),
+                        text = "Microphone Gain",
                         color = VixxoTextSecondary,
-                        fontSize = 14.sp
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = "${gainDb.toInt()} dB",
+                        text = "+${gainDb.toInt()} dB",
                         color = VixxoAccent,
-                        fontSize = 14.sp,
+                        fontSize = 13.sp,
+                        fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -377,43 +582,55 @@ fun StreamScreen(
                     colors = SliderDefaults.colors(
                         thumbColor = VixxoAccent,
                         activeTrackColor = VixxoAccent,
-                        inactiveTrackColor = VixxoBackground
+                        inactiveTrackColor = VixxoSurfaceSubtle
                     )
                 )
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(8.dp))
 
-        // Action Buttons
+        // =========================================================
+        // 7. HERO ACTION ROW (MUTE + START/STOP STREAM)
+        // =========================================================
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // Mute Button
+            // Mute Button (Tactile 35% width)
             OutlinedButton(
                 onClick = onToggleMute,
                 modifier = Modifier
                     .weight(0.35f)
-                    .height(56.dp),
+                    .height(58.dp),
                 shape = RoundedCornerShape(14.dp),
-                enabled = streamState == StreamState.STREAMING,
+                enabled = isStreaming,
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = if (isMuted) VixxoError else VixxoTextPrimary
+                    contentColor = if (isMuted) VixxoError else VixxoTextPrimary,
+                    containerColor = if (isMuted) VixxoError.copy(alpha = 0.15f) else Color.Transparent
+                ),
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp,
+                    if (isMuted) VixxoError else VixxoBorder
                 )
             ) {
                 Icon(
                     imageVector = if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
-                    contentDescription = "Mute"
+                    contentDescription = "Mute",
+                    tint = if (isMuted) VixxoError else VixxoTextPrimary
                 )
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(if (isMuted) "Unmute" else "Mute")
+                Text(
+                    text = if (isMuted) "Unmute" else "Mute",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp
+                )
             }
 
-            // Start / Stop Main Stream Button
+            // Start / Stop Main Stream Button (Glow Hero 65% width)
             Button(
                 onClick = {
-                    if (streamState == StreamState.STREAMING || streamState == StreamState.CONNECTING) {
+                    if (isStreaming || isConnecting) {
                         onStopStream()
                     } else {
                         val portInt = portText.toIntOrNull() ?: 47800
@@ -423,58 +640,87 @@ fun StreamScreen(
                 },
                 modifier = Modifier
                     .weight(0.65f)
-                    .height(56.dp),
+                    .height(58.dp),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (streamState == StreamState.STREAMING) VixxoError else VixxoAccent
+                    containerColor = if (isStreaming) VixxoError else VixxoAccent,
+                    contentColor = if (isStreaming) Color.White else Color(0xFF060D1A)
                 )
             ) {
                 Icon(
-                    imageVector = if (streamState == StreamState.STREAMING) Icons.Default.Stop else Icons.Default.PlayArrow,
+                    imageVector = if (isStreaming) Icons.Default.Stop else Icons.Default.PlayArrow,
                     contentDescription = null
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = if (streamState == StreamState.STREAMING) stringResource(R.string.btn_stop_stream) else stringResource(R.string.btn_start_stream),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
+                    text = if (isStreaming) "STOP STREAMING" else "START STREAMING",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 0.5.sp
                 )
             }
         }
 
-        // Test Local Mic Button (Without connecting to PC)
+        // =========================================================
+        // 8. LOCAL MIC TEST BUTTON
+        // =========================================================
         OutlinedButton(
             onClick = onToggleLocalTest,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp),
+                .height(44.dp),
             shape = RoundedCornerShape(12.dp),
-            enabled = streamState == StreamState.IDLE
+            enabled = !isStreaming && !isConnecting,
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = if (isLocalTesting) VixxoWarning else VixxoTextMuted
+            ),
+            border = androidx.compose.foundation.BorderStroke(
+                1.dp,
+                if (isLocalTesting) VixxoWarning else VixxoBorder
+            )
         ) {
             Text(
-                text = if (isLocalTesting) stringResource(R.string.btn_stop_test) else stringResource(R.string.btn_test_mic),
-                color = if (isLocalTesting) VixxoWarning else VixxoTextSecondary
+                text = if (isLocalTesting) "■ Stop Mic Test" else "▶ Test Microphone Level (Offline)",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold
             )
         }
     }
 
-    // Auto-Discovery Dialog
+    // =========================================================
+    // 9. AUTO-DISCOVERY DIALOG
+    // =========================================================
     if (showDiscoveryDialog) {
         AlertDialog(
             onDismissRequest = { showDiscoveryDialog = false },
-            title = { Text("Available PCs on Wi-Fi", color = VixxoTextPrimary, fontWeight = FontWeight.Bold) },
+            title = {
+                Text(
+                    "Select Vixxo PC",
+                    color = VixxoTextPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 17.sp
+                )
+            },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (isDiscovering) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            CircularProgressIndicator(color = VixxoAccent, modifier = Modifier.width(20.dp).height(20.dp))
+                            CircularProgressIndicator(
+                                color = VixxoAccent,
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
                             Spacer(modifier = Modifier.width(10.dp))
-                            Text("Searching for Vixxo on Wi-Fi...", color = VixxoTextSecondary, fontSize = 13.sp)
+                            Text("Searching local Wi-Fi beacon...", color = VixxoTextSecondary, fontSize = 13.sp)
                         }
                     } else if (discoveredServers.isEmpty()) {
-                        Text("No PCs found. Make sure Vixxo is open on your PC and both devices are on the same Wi-Fi.", color = VixxoTextSecondary, fontSize = 13.sp)
+                        Text(
+                            "No PCs found on Wi-Fi. Ensure Vixxo is running on your PC and both devices are on the same network (or switch to USB Mode).",
+                            color = VixxoTextSecondary,
+                            fontSize = 12.sp
+                        )
                     } else {
-                        LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             items(discoveredServers) { server ->
                                 Card(
                                     modifier = Modifier
@@ -485,11 +731,13 @@ fun StreamScreen(
                                             pinnedFingerprint = server.fingerprint.ifEmpty { null }
                                             showDiscoveryDialog = false
                                         },
-                                    colors = CardDefaults.cardColors(containerColor = VixxoBackground)
+                                    colors = CardDefaults.cardColors(containerColor = VixxoSurfaceSubtle),
+                                    shape = RoundedCornerShape(10.dp),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, VixxoBorder)
                                 ) {
-                                    Column(modifier = Modifier.padding(10.dp)) {
-                                        Text(server.serverName, fontWeight = FontWeight.Bold, color = VixxoAccent, fontSize = 14.sp)
-                                        Text("${server.host}:${server.tcpPort}", color = VixxoTextSecondary, fontSize = 12.sp)
+                                    Column(modifier = Modifier.padding(12.dp)) {
+                                        Text(server.serverName, fontWeight = FontWeight.Bold, color = VixxoAccent, fontSize = 13.sp)
+                                        Text("${server.host}:${server.tcpPort}", color = VixxoTextMuted, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
                                     }
                                 }
                             }
@@ -499,15 +747,65 @@ fun StreamScreen(
             },
             confirmButton = {
                 TextButton(onClick = onDiscoverClick) {
-                    Text("Refresh", color = VixxoAccent)
+                    Text("Refresh", color = VixxoAccent, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDiscoveryDialog = false }) {
-                    Text("Cancel", color = VixxoTextSecondary)
+                    Text("Close", color = VixxoTextSecondary)
                 }
             },
-            containerColor = VixxoSurface
+            containerColor = VixxoSurface,
+            shape = RoundedCornerShape(16.dp)
         )
+    }
+}
+
+/**
+ * Custom Studio Multi-Bar Equalizer Canvas
+ */
+@Composable
+fun StudioVisualizerCanvas(
+    level: Float,
+    isActive: Boolean,
+    isMuted: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Canvas(modifier = modifier) {
+        val barCount = 28
+        val spacing = 4.dp.toPx()
+        val totalSpacing = spacing * (barCount - 1)
+        val barWidth = (size.width - totalSpacing) / barCount
+        val maxHeight = size.height
+
+        for (i in 0 until barCount) {
+            val barNormalizedIndex = i.toFloat() / barCount
+            val curveFactor = 0.5f + 0.5f * sin(barNormalizedIndex * Math.PI).toFloat()
+
+            val barHeight = if (!isActive || isMuted) {
+                4.dp.toPx()
+            } else {
+                val calculated = maxHeight * level * curveFactor * (0.6f + 0.4f * sin(i * 1.5).toFloat().coerceAtLeast(0f))
+                calculated.coerceIn(4.dp.toPx(), maxHeight)
+            }
+
+            val color = when {
+                isMuted -> VixxoError.copy(alpha = 0.4f)
+                !isActive -> VixxoBorder
+                barNormalizedIndex > 0.85f -> VixxoError
+                barNormalizedIndex > 0.65f -> VixxoWarning
+                else -> VixxoAccent
+            }
+
+            val x = i * (barWidth + spacing)
+            val y = (maxHeight - barHeight) / 2f
+
+            drawRoundRect(
+                color = color,
+                topLeft = Offset(x, y),
+                size = Size(barWidth, barHeight),
+                cornerRadius = CornerRadius(2.dp.toPx(), 2.dp.toPx())
+            )
+        }
     }
 }
