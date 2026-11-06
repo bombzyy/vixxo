@@ -1,0 +1,59 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "windows", "windows", "{9A908783-81D6-4EC8-A665-4C8E2EC088A2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vixxo.Core", "windows\Vixxo.Core\Vixxo.Core.csproj", "{96999592-44F9-4770-A78B-7D1820F41C1D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{C83CD32A-3083-4A2E-BBDB-1298C0CBE295}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VixxoTestSender", "tools\VixxoTestSender\VixxoTestSender.csproj", "{6127A016-7A1E-47F2-9A13-C679EBFBE61E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{186625BB-CCB9-4438-A1B2-BDD19747E371}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vixxo.Tests", "tests\Vixxo.Tests\Vixxo.Tests.csproj", "{C27B0C9F-EF3A-418A-B7B2-63657AF7E58B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vixxo.Receiver", "windows\Vixxo.Receiver\Vixxo.Receiver.csproj", "{89ADDA4C-3DB1-432F-A7FF-F24B7953A635}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vixxo.App", "windows\Vixxo.App\Vixxo.App.csproj", "{E5B35C78-13E3-4AC1-B911-AAFBD3D39915}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{96999592-44F9-4770-A78B-7D1820F41C1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96999592-44F9-4770-A78B-7D1820F41C1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96999592-44F9-4770-A78B-7D1820F41C1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96999592-44F9-4770-A78B-7D1820F41C1D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6127A016-7A1E-47F2-9A13-C679EBFBE61E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6127A016-7A1E-47F2-9A13-C679EBFBE61E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6127A016-7A1E-47F2-9A13-C679EBFBE61E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6127A016-7A1E-47F2-9A13-C679EBFBE61E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C27B0C9F-EF3A-418A-B7B2-63657AF7E58B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C27B0C9F-EF3A-418A-B7B2-63657AF7E58B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C27B0C9F-EF3A-418A-B7B2-63657AF7E58B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C27B0C9F-EF3A-418A-B7B2-63657AF7E58B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89ADDA4C-3DB1-432F-A7FF-F24B7953A635}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89ADDA4C-3DB1-432F-A7FF-F24B7953A635}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89ADDA4C-3DB1-432F-A7FF-F24B7953A635}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89ADDA4C-3DB1-432F-A7FF-F24B7953A635}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E5B35C78-13E3-4AC1-B911-AAFBD3D39915}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5B35C78-13E3-4AC1-B911-AAFBD3D39915}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5B35C78-13E3-4AC1-B911-AAFBD3D39915}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5B35C78-13E3-4AC1-B911-AAFBD3D39915}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{96999592-44F9-4770-A78B-7D1820F41C1D} = {9A908783-81D6-4EC8-A665-4C8E2EC088A2}
+		{6127A016-7A1E-47F2-9A13-C679EBFBE61E} = {C83CD32A-3083-4A2E-BBDB-1298C0CBE295}
+		{C27B0C9F-EF3A-418A-B7B2-63657AF7E58B} = {186625BB-CCB9-4438-A1B2-BDD19747E371}
+		{89ADDA4C-3DB1-432F-A7FF-F24B7953A635} = {9A908783-81D6-4EC8-A665-4C8E2EC088A2}
+		{E5B35C78-13E3-4AC1-B911-AAFBD3D39915} = {9A908783-81D6-4EC8-A665-4C8E2EC088A2}
+	EndGlobalSection
+EndGlobal

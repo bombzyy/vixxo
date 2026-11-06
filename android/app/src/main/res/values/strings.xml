@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">Vixxo</string>
+    <string name="notification_channel_name">Microphone Streaming</string>
+    <string name="notification_channel_description">Active microphone streaming session notifications</string>
+    <string name="notification_title_streaming">Vixxo is Streaming Microphone</string>
+    <string name="notification_text_streaming">Audio streaming actively to your Windows PC</string>
+    <string name="action_stop">Stop</string>
+    <string name="action_mute">Mute</string>
+    <string name="action_unmute">Unmute</string>
+
+    <string name="stream_title">Microphone Stream</string>
+    <string name="stream_status_idle">Idle</string>
+    <string name="stream_status_connecting">Connecting...</string>
+    <string name="stream_status_streaming">Streaming Live</string>
+    <string name="stream_status_reconnecting">Reconnecting...</string>
+    <string name="stream_status_error">Error</string>
+
+    <string name="btn_start_stream">Start Streaming</string>
+    <string name="btn_stop_stream">Stop Streaming</string>
+    <string name="btn_test_mic">Test Phone Microphone</string>
+    <string name="btn_stop_test">Stop Microphone Test</string>
+
+    <string name="field_server_ip">Windows PC IP Address</string>
+    <string name="field_server_port">Port</string>
+    <string name="label_mic_level">Microphone Level</string>
+    <string name="label_rtt">Network RTT</string>
+    <string name="label_frames_sent">Frames Sent</string>
+    <string name="label_gain">Software Gain</string>
+    <string name="perm_mic_required">Microphone permission is required to stream audio to your PC.</string>
+    <string name="perm_grant">Grant Permission</string>
+</resources>

@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">Vixxo</string>
+    <string name="notification_channel_name">माइक्रोफ़ोन स्ट्रीमिंग</string>
+    <string name="notification_channel_description">सक्रिय माइक्रोफ़ोन स्ट्रीमिंग सत्र सूचनाएं</string>
+    <string name="notification_title_streaming">Vixxo माइक्रोफ़ोन स्ट्रीम कर रहा है</string>
+    <string name="notification_text_streaming">आपके Windows PC पर ऑडियो स्ट्रीम हो रहा है</string>
+    <string name="action_stop">रोकें</string>
+    <string name="action_mute">म्यूट करें</string>
+    <string name="action_unmute">अनम्यूट करें</string>
+
+    <string name="stream_title">माइक्रोफ़ोन स्ट्रीम</string>
+    <string name="stream_status_idle">निष्क्रिय</string>
+    <string name="stream_status_connecting">कनेक्ट हो रहा है...</string>
+    <string name="stream_status_streaming">लाइव स्ट्रीमिंग चालू है</string>
+    <string name="stream_status_reconnecting">पुनः कनेक्ट हो रहा है...</string>
+    <string name="stream_status_error">त्रुटि</string>
+
+    <string name="btn_start_stream">स्ट्रीमिंग शुरू करें</string>
+    <string name="btn_stop_stream">स्ट्रीमिंग बंद करें</string>
+    <string name="btn_test_mic">फ़ोन माइक का परीक्षण करें</string>
+    <string name="btn_stop_test">माइक परीक्षण रोकें</string>
+
+    <string name="field_server_ip">Windows PC का IP पता</string>
+    <string name="field_server_port">पोर्ट</string>
+    <string name="label_mic_level">माइक्रोफ़ोन स्तर</string>
+    <string name="label_rtt">नेटवर्क विलंब (RTT)</string>
+    <string name="label_frames_sent">भेजे गए फ़्रेम</string>
+    <string name="label_gain">सॉफ़्टवेयर गेन</string>
+    <string name="perm_mic_required">PC पर ऑडियो स्ट्रीम करने के लिए माइक्रोफ़ोन अनुमति आवश्यक है।</string>
+    <string name="perm_grant">अनुमति दें</string>
+</resources>

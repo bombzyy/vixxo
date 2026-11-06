@@ -1,0 +1,10 @@
+<resources>
+    <color name="vixxo_background">#0E1116</color>
+    <color name="vixxo_surface">#161B22</color>
+    <color name="vixxo_accent">#4F8CFF</color>
+    <color name="vixxo_text_primary">#E6EDF3</color>
+    <color name="vixxo_text_secondary">#8B98A8</color>
+    <color name="vixxo_success">#22C55E</color>
+    <color name="vixxo_warning">#F59E0B</color>
+    <color name="vixxo_error">#EF4444</color>
+</resources>

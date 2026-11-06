@@ -1,0 +1,48 @@
+# Vixxo Project .gitignore
+
+# Visual Studio & .NET
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+.vs/
+TestResults/
+*.DotSettings.user
+*.patch
+*.diff
+
+# Android & Gradle
+.gradle/
+build/
+**/build/
+local.properties
+.idea/
+*.iml
+.cxx/
+captures/
+.externalNativeBuild/
+android/.gradle/
+android/app/build/
+android/.idea/
+
+# Binaries & Generated Artifacts
+artifacts/publish/
+artifacts/*.exe
+artifacts/*.apk
+artifacts/*.txt
+artifacts/*.log
+
+# Logs & Temporary files
+*.log
+crash.log
+run_stdout.txt
+run_stderr.txt
+
+# OS Generated
+Thumbs.db
+desktop.ini
+.DS_Store
