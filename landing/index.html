@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Vixxo — Studio-Grade Android to Windows Virtual Microphone</title>
+  <meta name="description" content="High-fidelity, ultra-low latency Android to Windows virtual microphone. Streams uncompressed 48 kHz voice over Wi-Fi, USB, and Hotspot into Discord, OBS, and Zoom via VB-CABLE.">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2338bdf8'><path d='M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z'/><path d='M19 10v2a7 7 0 0 1-14 0v-2'/><line x1='12' x2='12' y1='19' y2='22'/></svg>">
+</head>
+<body>
+  <!-- WebGL 3D Interactive Background -->
+  <canvas id="webgl-canvas"></canvas>
+
+  <!-- Ambient Glow Atmosphere -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  <div class="ambient-glow glow-3"></div>
+
+  <!-- Page Wrapper -->
+  <div class="page-wrapper">
+    <!-- Navbar -->
+    <header class="navbar">
+      <div class="navbar-inner">
+        <a href="#top" class="brand">
+          <div class="brand-icon">
+            <i data-lucide="mic"></i>
+          </div>
+          <span>Vixxo</span>
+        </a>
+
+        <ul class="nav-links">
+          <li><a href="#pipeline" class="nav-link">How It Works</a></li>
+          <li><a href="#features" class="nav-link">Features</a></li>
+          <li><a href="#audio-lab" class="nav-link">Audio Lab</a></li>
+          <li><a href="#benchmarks" class="nav-link">Benchmarks</a></li>
+          <li><a href="#faq" class="nav-link">FAQ</a></li>
+        </ul>
+
+        <div class="nav-actions">
+          <a href="https://github.com/bombzyy/vixxo" target="_blank" class="btn btn-secondary">
+            <i data-lucide="github"></i>
+            <span>GitHub</span>
+          </a>
+          <a href="#downloads" class="btn btn-primary">
+            <i data-lucide="download"></i>
+            <span>Get v1.0.0</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section" id="top">
+      <div class="status-badge">
+        <span class="pulse-dot"></span>
+        <span>Vixxo v1.0.0 Released • Ultra-Low Latency Android to PC Mic</span>
+      </div>
+
+      <h1 class="hero-title">
+        Turn Your Android Into a<br>
+        <span class="gradient-text">Studio-Grade PC Microphone.</span>
+      </h1>
+
+      <p class="hero-subhead">
+        Stream uncompressed 48 kHz voice from your phone directly into Windows desktop audio apps — Discord, OBS Studio, Zoom, and Teams — via VB-CABLE with sub-5ms USB latency or seamless Wi-Fi.
+      </p>
+
+      <div class="hero-cta-group">
+        <a href="https://github.com/bombzyy/vixxo/releases/download/v1.0.0/Vixxo-Setup-x64.exe" class="btn btn-primary btn-large">
+          <i data-lucide="monitor"></i>
+          <span>Download Windows Setup (x64)</span>
+        </a>
+        <a href="https://github.com/bombzyy/vixxo/releases/download/v1.0.0/vixxo-android-release.apk" class="btn btn-secondary btn-large">
+          <i data-lucide="smartphone"></i>
+          <span>Get Android APK</span>
+        </a>
+      </div>
+
+      <div class="meta-stats-row">
+        <div class="meta-item">
+          <i data-lucide="check-circle-2"></i>
+          <span>48 kHz / 16-bit PCM Audio</span>
+        </div>
+        <div class="meta-item">
+          <i data-lucide="check-circle-2"></i>
+          <span>Sub-5ms Deterministic USB Latency</span>
+        </div>
+        <div class="meta-item">
+          <i data-lucide="check-circle-2"></i>
+          <span>Zero Kernel Driver Bluescreens</span>
+        </div>
+        <div class="meta-item">
+          <i data-lucide="check-circle-2"></i>
+          <span>End-to-End TLS 1.3 Encryption</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pipeline Architecture -->
+    <section class="flow-diagram-section" id="pipeline">
+      <div class="container">
+        <div class="section-tag">System Architecture</div>
+        <h2 class="section-title">The Complete Zero-Lag Audio Pipeline</h2>
+        <p class="section-desc">
+          From the phone's physical microphone diaphragm to Discord's voice buffers in under 5 milliseconds.
+        </p>
+
+        <div class="pipeline-grid">
+          <div class="glass-panel pipeline-node">
+            <span class="node-number">01. INGESTION</span>
+            <div class="node-icon-box">
+              <i data-lucide="mic-vocal"></i>
+            </div>
+            <h3 class="node-title">Android Capture</h3>
+            <p class="node-text">
+              Direct hardware capture via Kotlin AudioRecord at studio 48 kHz, 16-bit mono PCM. Runs as a persistent foreground service with wakelock.
+            </p>
+          </div>
+
+          <div class="glass-panel pipeline-node">
+            <span class="node-number">02. TRANSPORT</span>
+            <div class="node-icon-box">
+              <i data-lucide="zap"></i>
+            </div>
+            <h3 class="node-title">Triple Connection</h3>
+            <p class="node-text">
+              USB streaming via ADB reverse loopback (<5ms), LAN Wi-Fi with UDP auto-discovery, or direct Phone Hotspot mode for zero router isolation.
+            </p>
+          </div>
+
+          <div class="glass-panel pipeline-node">
+            <span class="node-number">03. DSP CORE</span>
+            <div class="node-icon-box">
+              <i data-lucide="sliders"></i>
+            </div>
+            <h3 class="node-title">Windows DSP Engine</h3>
+            <p class="node-text">
+              .NET 8 LTS audio engine featuring an adaptive circular jitter buffer, soft-knee peak limiter, 80 Hz high-pass rumble filter, and noise gate.
+            </p>
+          </div>
+
+          <div class="glass-panel pipeline-node">
+            <span class="node-number">04. ROUTING</span>
+            <div class="node-icon-box">
+              <i data-lucide="cable"></i>
+            </div>
+            <h3 class="node-title">VB-CABLE Virtual Mic</h3>
+            <p class="node-text">
+              Plays seamlessly into "CABLE Input" via WASAPI. Discord, OBS, Teams, and Zoom pick up "CABLE Output" as a genuine physical microphone!
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Grid -->
+    <section class="features-section" id="features">
+      <div class="container">
+        <div class="section-tag">Engineered for Pro Audio</div>
+        <h2 class="section-title">Features Built for Creators, Gamers & Streamers</h2>
+        <p class="section-desc">
+          No cloud telemetry. No subscription fees. No brittle virtual audio drivers. Just high-performance local engineering.
+        </p>
+
+        <div class="features-grid">
+          <!-- Feature 1: USB Mode -->
+          <div class="glass-panel feature-box feat-span-8 tilt-card">
+            <div>
+              <div class="feature-icon-badge">
+                <i data-lucide="cpu"></i>
+              </div>
+              <h3 class="feature-title">Ultra-Low Latency USB Streaming (ADB Reverse)</h3>
+              <p class="feature-p">
+                Connect your Android phone with a standard USB cable and achieve sub-5ms deterministic audio latency. Vixxo automatically configures reverse port tunneling (<code>adb reverse tcp:47800 tcp:47800</code>), bypassing Wi-Fi jitter, router packet drops, and bandwidth congestion entirely.
+              </p>
+            </div>
+            <div class="feature-badges-list">
+              <span class="tech-chip">Sub-5ms Latency</span>
+              <span class="tech-chip">Zero Wi-Fi Jitter</span>
+              <span class="tech-chip">AP Isolation Immune</span>
+              <span class="tech-chip">Auto Device Watcher</span>
+            </div>
+          </div>
+
+          <!-- Feature 2: Wi-Fi & Hotspot -->
+          <div class="glass-panel feature-box feat-span-4 tilt-card">
+            <div>
+              <div class="feature-icon-badge">
+                <i data-lucide="wifi"></i>
+              </div>
+              <h3 class="feature-title">Instant Wi-Fi & Hotspot Pairing</h3>
+              <p class="feature-p">
+                Walk around freely while streaming. Pair instantly by scanning the dynamic on-screen QR code or entering a 6-digit PIN. Supports direct Mobile Hotspot for zero-configuration use on college dorm or hotel networks.
+              </p>
+            </div>
+            <div class="feature-badges-list">
+              <span class="tech-chip">QR Code Camera Scan</span>
+              <span class="tech-chip">UDP Discovery Beacon</span>
+              <span class="tech-chip">Mobile Hotspot Ready</span>
+            </div>
+          </div>
+
+          <!-- Feature 3: DSP Filters -->
+          <div class="glass-panel feature-box feat-span-4 tilt-card">
+            <div>
+              <div class="feature-icon-badge">
+                <i data-lucide="activity"></i>
+              </div>
+              <h3 class="feature-title">Built-In Studio DSP Filters</h3>
+              <p class="feature-p">
+                Keep your voice crisp and clean. A real-time 80 Hz high-pass filter cuts desk bumps and AC rumble, an adjustable noise gate silences keyboard clicks, and a soft-knee limiter guarantees zero digital clipping distortion.
+              </p>
+            </div>
+            <div class="feature-badges-list">
+              <span class="tech-chip">80 Hz High-Pass Filter</span>
+              <span class="tech-chip">Dynamic Noise Gate</span>
+              <span class="tech-chip">Soft-Knee Peak Limiter</span>
+            </div>
+          </div>
+
+          <!-- Feature 4: Virtual Mic Integration -->
+          <div class="glass-panel feature-box feat-span-8 tilt-card">
+            <div>
+              <div class="feature-icon-badge">
+                <i data-lucide="radio"></i>
+              </div>
+              <h3 class="feature-title">Universal Compatibility via VB-Audio Virtual Cable</h3>
+              <p class="feature-p">
+                Rather than deploying an unsigned custom kernel driver that triggers Windows BSOD crashes, Vixxo routes audio directly into the battle-tested VB-CABLE virtual audio device. Works right out of the box with Discord, Zoom, Microsoft Teams, OBS Studio, Audacity, and Windows Sound Recorder.
+              </p>
+            </div>
+            <div class="feature-badges-list">
+              <span class="tech-chip">WASAPI Shared Mode</span>
+              <span class="tech-chip">Discord Verified</span>
+              <span class="tech-chip">OBS Studio Ready</span>
+              <span class="tech-chip">Zero Kernel Driver Risk</span>
+            </div>
+          </div>
+
+          <!-- Feature 5: Native Tray & Background -->
+          <div class="glass-panel feature-box feat-span-6 tilt-card">
+            <div>
+              <div class="feature-icon-badge">
+                <i data-lucide="bell-ring"></i>
+              </div>
+              <h3 class="feature-title">Background Android Service & System Tray</h3>
+              <p class="feature-p">
+                Turn your phone screen off and put it in your pocket. The Android client streams continuously via a foreground service with a persistent notification. On Windows, Vixxo minimizes to the system tray with one-click mute and headphone monitoring.
+              </p>
+            </div>
+            <div class="feature-badges-list">
+              <span class="tech-chip">Screen-Off Streaming</span>
+              <span class="tech-chip">Windows System Tray</span>
+              <span class="tech-chip">Live Local Monitoring</span>
+            </div>
+          </div>
+
+          <!-- Feature 6: Zero-Trust Security -->
+          <div class="glass-panel feature-box feat-span-6 tilt-card">
+            <div>
+              <div class="feature-icon-badge">
+                <i data-lucide="shield-check"></i>
+              </div>
+              <h3 class="feature-title">Bank-Grade Zero-Trust Security</h3>
+              <p class="feature-p">
+                Audio is encrypted in-flight using TLS 1.3 with AES-256-GCM. Connections are secured with SHA-256 certificate pinning and single-use 6-digit PIN codes that automatically expire after 5 minutes to prevent eavesdropping on public Wi-Fi.
+              </p>
+            </div>
+            <div class="feature-badges-list">
+              <span class="tech-chip">TLS 1.3 / AES-256</span>
+              <span class="tech-chip">SHA-256 Cert Pinning</span>
+              <span class="tech-chip">Ephemeral 6-Digit PIN</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive DSP Audio Lab -->
+    <section class="audio-lab-section" id="audio-lab">
+      <div class="container">
+        <div class="audio-lab-card">
+          <div class="lab-header">
+            <div class="lab-title-group">
+              <h3>Live Audio Engine Playground</h3>
+              <p>Test Vixxo's real-time DSP filter chain directly in your browser. Watch the waveform respond.</p>
+            </div>
+
+            <button id="btn-test-audio" class="btn btn-primary">
+              <i data-lucide="play"></i>
+              <span>Test Studio Voice</span>
+            </button>
+          </div>
+
+          <!-- Oscilloscope Canvas -->
+          <canvas id="oscilloscope" class="oscilloscope-canvas"></canvas>
+
+          <!-- DSP Filter Toggles -->
+          <div class="dsp-controls-grid">
+            <div class="dsp-toggle-box active" id="toggle-hpf">
+              <div class="dsp-toggle-info">
+                <h4>80 Hz High-Pass Filter</h4>
+                <p>Cuts AC hum and desk vibration rumble</p>
+              </div>
+              <div class="switch-pill"></div>
+            </div>
+
+            <div class="dsp-toggle-box active" id="toggle-gate">
+              <div class="dsp-toggle-info">
+                <h4>Room Noise Gate (-42 dB)</h4>
+                <p>Silences background keyboard and fan hiss</p>
+              </div>
+              <div class="switch-pill"></div>
+            </div>
+
+            <div class="dsp-toggle-box active" id="toggle-limiter">
+              <div class="dsp-toggle-info">
+                <h4>Soft-Knee Peak Limiter</h4>
+                <p>Prevents digital clipping on loud shouts</p>
+              </div>
+              <div class="switch-pill"></div>
+            </div>
+          </div>
+
+          <!-- Meters Row -->
+          <div class="meters-row">
+            <div class="meter-label">PEAK LEVEL</div>
+            <div class="meter-track">
+              <div id="meter-peak-fill" class="meter-fill"></div>
+            </div>
+            <div id="peak-db-text" class="meter-db-value">-inf dB</div>
+          </div>
+
+          <div class="meters-row" style="margin-top: 10px;">
+            <div class="meter-label">RMS LEVEL</div>
+            <div class="meter-track">
+              <div id="meter-rms-fill" class="meter-fill"></div>
+            </div>
+            <div id="rms-db-text" class="meter-db-value">-inf dB</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Benchmarks Comparison -->
+    <section class="benchmarks-section" id="benchmarks">
+      <div class="container">
+        <div class="section-tag">Performance Comparison</div>
+        <h2 class="section-title">How Vixxo Outperforms Conventional Solutions</h2>
+        <p class="section-desc">
+          Compare Vixxo's deterministic local streaming against Bluetooth Handsfree and generic wireless mic apps.
+        </p>
+
+        <div class="glass-panel benchmark-card">
+          <table class="benchmark-table">
+            <thead>
+              <tr>
+                <th>Feature / Metric</th>
+                <th class="highlight-col">Vixxo (USB Mode)</th>
+                <th>Vixxo (Wi-Fi)</th>
+                <th>Bluetooth (HFP Profile)</th>
+                <th>Generic Wi-Fi Mic Apps</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Audio Latency</strong></td>
+                <td class="highlight-col"><span class="badge-win"><i data-lucide="check"></i> &lt; 5 ms</span></td>
+                <td><span class="badge-win"><i data-lucide="check"></i> 8 - 15 ms</span></td>
+                <td><span class="badge-loss"><i data-lucide="x"></i> 150 - 250 ms</span></td>
+                <td><span class="badge-loss"><i data-lucide="x"></i> 60 - 180 ms</span></td>
+              </tr>
+              <tr>
+                <td><strong>Sample Rate & Fidelity</strong></td>
+                <td class="highlight-col"><span class="badge-win"><i data-lucide="check"></i> 48 kHz / 16-bit PCM</span></td>
+                <td><span class="badge-win"><i data-lucide="check"></i> 48 kHz / 16-bit PCM</span></td>
+                <td><span class="badge-loss"><i data-lucide="x"></i> 8 - 16 kHz (Telephone)</span></td>
+                <td><span class="badge-loss"><i data-lucide="x"></i> Lossy compressed</span></td>
+              </tr>
+              <tr>
+                <td><strong>Router AP Isolation</strong></td>
+                <td class="highlight-col"><span class="badge-win"><i data-lucide="check"></i> 100% Immune</span></td>
+                <td>Hotspot Fallback</td>
+                <td>N/A</td>
+                <td><span class="badge-loss"><i data-lucide="x"></i> Fails completely</span></td>
+              </tr>
+              <tr>
+                <td><strong>DSP Filters (Gate/Limiter)</strong></td>
+                <td class="highlight-col"><span class="badge-win"><i data-lucide="check"></i> Hardware-grade DSP</span></td>
+                <td><span class="badge-win"><i data-lucide="check"></i> Hardware-grade DSP</span></td>
+                <td><span class="badge-loss"><i data-lucide="x"></i> None</span></td>
+                <td><span class="badge-loss"><i data-lucide="x"></i> Rare / Paid only</span></td>
+              </tr>
+              <tr>
+                <td><strong>Privacy & Cloud Telemetry</strong></td>
+                <td class="highlight-col"><span class="badge-win"><i data-lucide="check"></i> 100% Local Localhost</span></td>
+                <td><span class="badge-win"><i data-lucide="check"></i> 100% Local Localhost</span></td>
+                <td>Local</td>
+                <td><span class="badge-loss"><i data-lucide="x"></i> Cloud servers & Ads</span></td>
+              </tr>
+              <tr>
+                <td><strong>License & Price</strong></td>
+                <td class="highlight-col"><span class="badge-win"><i data-lucide="check"></i> Free & Open Source</span></td>
+                <td><span class="badge-win"><i data-lucide="check"></i> Free & Open Source</span></td>
+                <td>Hardware dependent</td>
+                <td><span class="badge-loss"><i data-lucide="x"></i> Subscription / Ads</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ Accordion -->
+    <section class="faq-section" id="faq">
+      <div class="container">
+        <div class="section-tag">Frequently Asked Questions</div>
+        <h2 class="section-title">Everything You Need to Know</h2>
+        <p class="section-desc">Got questions about setup, drivers, or network routing? Here are the answers.</p>
+
+        <div class="faq-grid">
+          <div class="faq-item">
+            <div class="faq-question">
+              <span>Why did Wi-Fi say "No PCs found" or "Reconnection failed" on my home Wi-Fi?</span>
+              <i data-lucide="chevron-down" class="faq-chevron"></i>
+            </div>
+            <div class="faq-answer">
+              Many home fiber routers (like JioFiber or Airtel) have a security setting enabled by default called <strong>AP Isolation (Client Isolation)</strong>. This feature allows both devices to browse the web, but blocks wireless devices from communicating with each other on the local network. You can bypass this instantly by turning on your phone's <strong>Mobile Hotspot</strong>, connecting your PC to it, or by plugging in a USB cable!
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-question">
+              <span>How do I select Vixxo inside Discord, Zoom, Teams, or OBS Studio?</span>
+              <i data-lucide="chevron-down" class="faq-chevron"></i>
+            </div>
+            <div class="faq-answer">
+              Vixxo plays audio directly into the virtual input of VB-CABLE. In your voice settings (e.g., Discord Voice & Video settings), simply choose <strong>"CABLE Output (VB-Audio Virtual Cable)"</strong> as your Input Device (Microphone). Vixxo handles the rest automatically.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-question">
+              <span>Why does Vixxo use VB-CABLE instead of a custom kernel driver?</span>
+              <i data-lucide="chevron-down" class="faq-chevron"></i>
+            </div>
+            <div class="faq-answer">
+              Custom audio kernel drivers on Windows require EV code-signing certificates and frequently cause Blue Screen of Death (BSOD) crashes during Windows updates or sleep/wake cycles. VB-CABLE is the industry standard for virtual audio routing, used safely by millions of podcasters and gamers worldwide.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-question">
+              <span>How do I enable USB streaming with the lowest latency?</span>
+              <i data-lucide="chevron-down" class="faq-chevron"></i>
+            </div>
+            <div class="faq-answer">
+              Enable "USB Debugging" in your Android phone's Developer Options, plug in the USB cable, and open Vixxo on PC. Vixxo's automated ADB watcher detects the device and maps port 47800 over the wire. On your phone app, simply tap "USB" and "Start Streaming" for sub-5ms studio audio.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Download CTA Banner -->
+    <section class="downloads-section" id="downloads">
+      <div class="container">
+        <div class="download-banner">
+          <h2 class="banner-title">Ready for Studio-Grade Audio?</h2>
+          <p class="banner-desc">
+            Download Vixxo for Windows and Android today. 100% Free, Open Source, and zero advertisements.
+          </p>
+
+          <div class="downloads-action-row">
+            <a href="https://github.com/bombzyy/vixxo/releases/download/v1.0.0/Vixxo-Setup-x64.exe" class="btn btn-primary btn-large">
+              <i data-lucide="monitor"></i>
+              <span>Download Windows Installer (48 MB)</span>
+            </a>
+            <a href="https://github.com/bombzyy/vixxo/releases/download/v1.0.0/vixxo-android-release.apk" class="btn btn-secondary btn-large">
+              <i data-lucide="smartphone"></i>
+              <span>Download Android APK (10 MB)</span>
+            </a>
+            <a href="https://github.com/bombzyy/vixxo" target="_blank" class="btn btn-secondary btn-large">
+              <i data-lucide="github"></i>
+              <span>Star on GitHub</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-top">
+          <div class="brand">
+            <div class="brand-icon">
+              <i data-lucide="mic"></i>
+            </div>
+            <span>Vixxo</span>
+          </div>
+
+          <ul class="footer-links">
+            <li><a href="https://github.com/bombzyy/vixxo" class="footer-link">GitHub</a></li>
+            <li><a href="https://github.com/bombzyy/vixxo/releases" class="footer-link">Releases</a></li>
+            <li><a href="https://github.com/bombzyy/vixxo/blob/main/docs/SPEC.md" class="footer-link">Architecture</a></li>
+            <li><a href="https://github.com/bombzyy/vixxo/blob/main/docs/PROTOCOL.md" class="footer-link">Protocol</a></li>
+            <li><a href="https://vb-audio.com/Cable/" target="_blank" class="footer-link">VB-CABLE Driver</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-bottom">
+          <p>© 2026 Vixxo Project. Released under the MIT License. Built with .NET 8 LTS, WASAPI, and Jetpack Compose.</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Scripts -->
+  <script src="assets/js/three.min.js"></script>
+  <script src="assets/js/lucide.min.js"></script>
+  <script src="assets/js/scene3d.js"></script>
+  <script src="assets/js/audio-sim.js"></script>
+  <script>
+    // Initialize Lucide Icons
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+
+    // FAQ Accordion Interaction
+    document.querySelectorAll('.faq-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const isOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item').forEach(el => el.classList.remove('open'));
+        if (!isOpen) item.classList.add('open');
+      });
+    });
+
+    // 3D Tilt Card Parallax Effect
+    document.querySelectorAll('.tilt-card').forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const rotateX = ((y - centerY) / centerY) * -7;
+        const rotateY = ((x - centerX) / centerX) * 7;
+        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
+      });
+
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)';
+      });
+    });
+  </script>
+</body>
+</html>
