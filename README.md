@@ -8,7 +8,7 @@
 [![Release](https://img.shields.io/badge/Release-v1.0.0-0284c7?style=for-the-badge&logo=github)](https://github.com/bombzyy/vixxo/releases/tag/v1.0.0)
 [![Website](https://img.shields.io/badge/Website-Live_on_Cloudflare-38bdf8?style=for-the-badge&logo=cloudflare)](https://vixxo-1m6.pages.dev/)
 [![Platform](https://img.shields.io/badge/Platform-Windows_%7C_Android-6366f1?style=for-the-badge)](https://github.com/bombzyy/vixxo)
-[![Tests](https://img.shields.io/badge/Tests-33%2F33_Passing-10b981?style=for-the-badge)](https://github.com/bombzyy/vixxo)
+[![Tests](https://img.shields.io/badge/Tests-38%2F38_Passing-10b981?style=for-the-badge)](https://github.com/bombzyy/vixxo)
 [![License](https://img.shields.io/badge/License-MIT-f59e0b?style=for-the-badge)](LICENSE)
 
 <br/>
@@ -88,7 +88,19 @@ Most wireless microphone solutions suffer from major drawbacks:
 - **Persistent Background Streaming:** Powered by an Android Foreground Service with continuous notification and CPU partial wakelock so streaming never drops when your screen turns off.
 - **Integrated QR Scanner:** Quickly scans PC pairing barcodes with automated camera runtime permission handling.
 
-### 6. 🔒 Zero-Trust Security & Privacy
+### 6. 🎮 In-Game Soundboard & Valorant Trolling Pack
+- **Built-in Valorant Tactical Cues:** Includes synthesized 48 kHz studio sounds for competitive voice chat:
+  - `Spike Planted` (Radar beeps & sub-bass drop)
+  - `Spike Defusing` (Defusal kit electrical buzzing)
+  - `Spike Down` (Tactical radio alert)
+  - `Last Player Standing` (Cinematic heartbeat thuds)
+  - `Headshot Dink` (Metallic armor crunch)
+- **Classic Meme SFX:** Includes MLG `Airhorn`, comedic `Sad Trombone`, and vinyl `Record Scratch`.
+- **Keyboard Shortcuts:** Trigger any sound instantly in-game using hotkeys `1`–`8` (or Numpad `1`–`8`), and press `Space` / `NumPad 0` for instant panic stop.
+- **100% User Customizable:** Delete any default sound with one click (`✕`) to free up the pad into an `+ Empty pad (Add sound)`. Import your own custom `.wav`, `.mp3`, or `.flac` audio files anytime.
+- **Output Mix Panel:** Independent gain faders for Microphone and Soundboard audio, with dedicated toggles to send clips into the virtual microphone (`CABLE Input`) and monitor in local headphones.
+
+### 7. 🔒 Zero-Trust Security & Privacy
 - **End-to-End Encryption:** Audio frames are transmitted over TLS 1.3 with AES-256-GCM cipher suites.
 - **SHA-256 Certificate Pinning:** Protects against local network man-in-the-middle (MITM) attacks.
 - **Single-Use 6-Digit PIN Pairing:** Temporary pairing PINs automatically expire after 5 minutes to prevent unauthorized devices from connecting.
