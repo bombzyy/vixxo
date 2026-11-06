@@ -27,6 +27,39 @@ public partial class MainWindow : Window
         Microsoft.Win32.SystemEvents.PowerModeChanged += OnPowerModeChanged;
     }
 
+    protected override void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)
+    {
+        // Don't intercept shortcuts when typing in a TextBox
+        if (e.OriginalSource is System.Windows.Controls.TextBox)
+        {
+            base.OnPreviewKeyDown(e);
+            return;
+        }
+
+        if (e.Key == System.Windows.Input.Key.Space)
+        {
+            _viewModel.TriggerShortcut("Space");
+            e.Handled = true;
+        }
+        else if (e.Key >= System.Windows.Input.Key.D1 && e.Key <= System.Windows.Input.Key.D9)
+        {
+            _viewModel.TriggerShortcut(((int)e.Key - (int)System.Windows.Input.Key.D0).ToString());
+            e.Handled = true;
+        }
+        else if (e.Key >= System.Windows.Input.Key.NumPad1 && e.Key <= System.Windows.Input.Key.NumPad9)
+        {
+            _viewModel.TriggerShortcut(((int)e.Key - (int)System.Windows.Input.Key.NumPad0).ToString());
+            e.Handled = true;
+        }
+        else if (e.Key == System.Windows.Input.Key.NumPad0 || e.Key == System.Windows.Input.Key.D0)
+        {
+            _viewModel.TriggerShortcut("0");
+            e.Handled = true;
+        }
+
+        base.OnPreviewKeyDown(e);
+    }
+
     private void OnPowerModeChanged(object sender, Microsoft.Win32.PowerModeChangedEventArgs e)
     {
         if (e.Mode == Microsoft.Win32.PowerModes.Suspend)

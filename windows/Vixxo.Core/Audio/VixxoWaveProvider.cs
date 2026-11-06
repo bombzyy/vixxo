@@ -22,6 +22,8 @@ public sealed class VixxoWaveProvider : IWaveProvider
     private int _driftAdjustmentCounter;
 
     public AudioDspProcessor DspProcessor { get; }
+    public bool IsMonitorOutput { get; set; } = false;
+    public SoundboardMixer? SoundboardMixer { get; set; }
 
     public VixxoWaveProvider(CircularJitterBuffer jitterBuffer, WaveFormat? endpointFormat = null)
     {
@@ -141,6 +143,16 @@ public sealed class VixxoWaveProvider : IWaveProvider
 
         // Apply DSP (HPF 80 Hz + Noise Gate)
         DspProcessor.ProcessMono(_floatScratchBuffer.AsSpan(0, framesRequested));
+
+        // Mix soundboard clips before Limiter & Output gain
+        if (IsMonitorOutput)
+        {
+            SoundboardMixer?.MixIntoMonitor(_floatScratchBuffer, framesRequested);
+        }
+        else
+        {
+            SoundboardMixer?.MixInto(_floatScratchBuffer, framesRequested);
+        }
 
         // Apply Gain, Mute, Soft Limiter, and calculate Peak/RMS
         float sumSquares = 0f;

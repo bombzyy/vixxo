@@ -19,6 +19,8 @@ public sealed class WasapiAudioRenderer : IDisposable
     private bool _isNoiseGateEnabled = true;
     private float _noiseGateThresholdDb = -42.0f;
     private DriftCompensator? _driftCompensator;
+    public bool IsMonitorOutput { get; set; } = false;
+    public SoundboardMixer? SoundboardMixer { get; set; }
 
     public WasapiAudioRenderer(CircularJitterBuffer jitterBuffer)
     {
@@ -123,6 +125,8 @@ public sealed class WasapiAudioRenderer : IDisposable
             _waveProvider.DspProcessor.IsNoiseGateEnabled = _isNoiseGateEnabled;
             _waveProvider.DspProcessor.GateThresholdDb = _noiseGateThresholdDb;
             _waveProvider.SetDriftCompensator(_driftCompensator);
+            _waveProvider.SoundboardMixer = SoundboardMixer;
+            _waveProvider.IsMonitorOutput = IsMonitorOutput;
 
             try
             {

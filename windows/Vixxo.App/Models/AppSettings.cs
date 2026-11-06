@@ -16,6 +16,10 @@ public sealed class AppSettings
     public bool IsHighPassFilterEnabled { get; set; } = true;
     public bool IsNoiseGateEnabled { get; set; } = true;
     public float NoiseGateThresholdDb { get; set; } = -42.0f;
+    public float SoundboardVolumeDb { get; set; } = -3.0f;
+    public float MicVolumeDb { get; set; } = 0.0f;
+    public bool SendClipsToVirtualMic { get; set; } = true;
+    public bool MonitorClipsInHeadphones { get; set; } = false;
     public bool MinimizeToTray { get; set; } = true;
     public bool CloseToTray { get; set; } = true;
 }

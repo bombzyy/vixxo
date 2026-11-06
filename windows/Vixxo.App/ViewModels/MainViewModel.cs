@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Windows.Input;
 using System.Windows.Threading;
 using NAudio.CoreAudioApi;
@@ -59,6 +60,18 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private string _usbStatusText = "Looking for USB Android devices...";
     private string _usbStatusColor = "#94A3B8";
 
+    // Workspace Navigation
+    private string _currentTab = "Studio";
+
+    // Soundboard
+    private float _soundboardVolumeDb = -3.0f;
+    private float _micVolumeDb = 0.0f;
+    private bool _sendClipsToVirtualMic = true;
+    private bool _monitorClipsInHeadphones = false;
+    private string _nowPlayingText = "Nothing playing";
+    private string _searchSoundText = string.Empty;
+    private string _selectedCategory = "All sounds";
+
     public MainViewModel(AudioService audioService, SettingsService settingsService)
     {
         _audioService = audioService ?? throw new ArgumentNullException(nameof(audioService));
@@ -68,6 +81,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         MonitoringDevices = new ObservableCollection<AudioDeviceInfo>();
         LocalIpAddresses = new ObservableCollection<string>();
         ConnectedUsbDevices = new ObservableCollection<AdbDeviceInfo>();
+        SoundPads = new ObservableCollection<SoundPadViewModel>();
+        FilteredSoundPads = new ObservableCollection<SoundPadViewModel>();
+        Categories = new ObservableCollection<string> { "All sounds", "Valorant", "Memes", "Custom" };
 
         // Commands
         ToggleMuteCommand = new RelayCommand(ToggleMute);
@@ -78,6 +94,18 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         ToggleMonitoringCommand = new RelayCommand(ToggleMonitoring);
         OpenPairingDialogCommand = new RelayCommand(OpenPairingDialog);
         InstallDriverCommand = new RelayCommand(async () => await InstallDriverAsync(), () => !_isInstallingDriver);
+
+        // Navigation Commands
+        SelectStudioCommand = new RelayCommand(() => CurrentTab = "Studio");
+        SelectSoundboardCommand = new RelayCommand(() => CurrentTab = "Soundboard");
+        SelectSettingsCommand = new RelayCommand(() => CurrentTab = "Settings");
+
+        // Soundboard Commands
+        StopAllSoundsCommand = new RelayCommand(StopAllSounds);
+        AddSoundCommand = new RelayCommand(AddCustomSound);
+
+        // Listen for Soundboard playback events
+        _audioService.SoundboardMixer.PlaybackStateChanged += OnSoundboardStateChanged;
 
         // Metering Dispatcher Timer (~30 FPS)
         _meterTimer = new DispatcherTimer(DispatcherPriority.Render)
@@ -95,6 +123,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public ObservableCollection<AudioDeviceInfo> MonitoringDevices { get; }
     public ObservableCollection<string> LocalIpAddresses { get; }
     public ObservableCollection<AdbDeviceInfo> ConnectedUsbDevices { get; }
+    public ObservableCollection<SoundPadViewModel> SoundPads { get; }
+    public ObservableCollection<SoundPadViewModel> FilteredSoundPads { get; }
+    public ObservableCollection<string> Categories { get; }
 
     // Commands
     public ICommand ToggleMuteCommand { get; }
@@ -105,6 +136,127 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public ICommand ToggleMonitoringCommand { get; }
     public ICommand OpenPairingDialogCommand { get; }
     public ICommand InstallDriverCommand { get; }
+
+    // Navigation Commands
+    public ICommand SelectStudioCommand { get; }
+    public ICommand SelectSoundboardCommand { get; }
+    public ICommand SelectSettingsCommand { get; }
+
+    // Soundboard Commands
+    public ICommand StopAllSoundsCommand { get; }
+    public ICommand AddSoundCommand { get; }
+
+    // Navigation Properties
+    public string CurrentTab
+    {
+        get => _currentTab;
+        set
+        {
+            if (SetProperty(ref _currentTab, value))
+            {
+                OnPropertyChanged(nameof(IsStudioTabActive));
+                OnPropertyChanged(nameof(IsSoundboardTabActive));
+                OnPropertyChanged(nameof(IsSettingsTabActive));
+                OnPropertyChanged(nameof(BreadcrumbText));
+            }
+        }
+    }
+
+    public bool IsStudioTabActive => CurrentTab == "Studio";
+    public bool IsSoundboardTabActive => CurrentTab == "Soundboard";
+    public bool IsSettingsTabActive => CurrentTab == "Settings";
+    public string BreadcrumbText => $"VIXXO  ›  {CurrentTab}";
+
+    // Soundboard Properties
+    public float SoundboardVolumeDb
+    {
+        get => _soundboardVolumeDb;
+        set
+        {
+            if (SetProperty(ref _soundboardVolumeDb, value))
+            {
+                _audioService.SoundboardMixer.SoundboardVolumeDb = value;
+                _settingsService.CurrentSettings.SoundboardVolumeDb = value;
+                OnPropertyChanged(nameof(SoundboardVolumeText));
+            }
+        }
+    }
+
+    public string SoundboardVolumeText => $"{SoundboardVolumeDb:F1} dB";
+
+    public float MicVolumeDb
+    {
+        get => _micVolumeDb;
+        set
+        {
+            if (SetProperty(ref _micVolumeDb, value))
+            {
+                _audioService.SoundboardMixer.MicrophoneVolumeDb = value;
+                _settingsService.CurrentSettings.MicVolumeDb = value;
+                OnPropertyChanged(nameof(MicVolumeText));
+            }
+        }
+    }
+
+    public string MicVolumeText => $"{MicVolumeDb:F1} dB";
+
+    public bool SendClipsToVirtualMic
+    {
+        get => _sendClipsToVirtualMic;
+        set
+        {
+            if (SetProperty(ref _sendClipsToVirtualMic, value))
+            {
+                _audioService.SoundboardMixer.SendClipsToVirtualMic = value;
+                _settingsService.CurrentSettings.SendClipsToVirtualMic = value;
+            }
+        }
+    }
+
+    public bool MonitorClipsInHeadphones
+    {
+        get => _monitorClipsInHeadphones;
+        set
+        {
+            if (SetProperty(ref _monitorClipsInHeadphones, value))
+            {
+                _audioService.SoundboardMixer.MonitorClipsInHeadphones = value;
+                _settingsService.CurrentSettings.MonitorClipsInHeadphones = value;
+            }
+        }
+    }
+
+    public string NowPlayingText
+    {
+        get => _nowPlayingText;
+        private set => SetProperty(ref _nowPlayingText, value);
+    }
+
+    public string SoundClipsCountText => $"{_audioService.SoundboardMixer.Clips.Count} clips";
+
+    public string SearchSoundText
+    {
+        get => _searchSoundText;
+        set
+        {
+            if (SetProperty(ref _searchSoundText, value))
+            {
+                ApplySoundFilter();
+            }
+        }
+    }
+
+    public string SelectedCategory
+    {
+        get => _selectedCategory;
+        set
+        {
+            if (SetProperty(ref _selectedCategory, value))
+            {
+                ApplySoundFilter();
+            }
+        }
+    }
 
     // Properties
     public ServerState ServerState
@@ -460,6 +612,10 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _noiseGateThresholdDb = s.NoiseGateThresholdDb;
         _selectedLatencyMode = s.LatencyMode;
         _isMonitoringEnabled = s.IsMonitoringEnabled;
+        _soundboardVolumeDb = s.SoundboardVolumeDb;
+        _micVolumeDb = s.MicVolumeDb;
+        _sendClipsToVirtualMic = s.SendClipsToVirtualMic;
+        _monitorClipsInHeadphones = s.MonitorClipsInHeadphones;
 
         // Apply audio states
         _audioService.MainRenderer.GainDb = _gainDb;
@@ -469,6 +625,14 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _audioService.MainRenderer.IsNoiseGateEnabled = _isNoiseGateEnabled;
         _audioService.MainRenderer.NoiseGateThresholdDb = _noiseGateThresholdDb;
         _audioService.SetLatencyMode(_selectedLatencyMode);
+
+        _audioService.SoundboardMixer.SoundboardVolumeDb = _soundboardVolumeDb;
+        _audioService.SoundboardMixer.MicrophoneVolumeDb = _micVolumeDb;
+        _audioService.SoundboardMixer.SendClipsToVirtualMic = _sendClipsToVirtualMic;
+        _audioService.SoundboardMixer.MonitorClipsInHeadphones = _monitorClipsInHeadphones;
+
+        // Initialize Soundboard
+        RefreshSoundPads();
 
         // Load network IPs
         LocalIpAddresses.Clear();
@@ -801,8 +965,176 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         });
     }
 
+    // =========================================================
+    // SOUNDBOARD LOGIC
+    // =========================================================
+
+    public void RefreshSoundPads()
+    {
+        App.Current?.Dispatcher.InvokeAsync(() =>
+        {
+            SoundPads.Clear();
+            var clips = _audioService.SoundboardMixer.Clips;
+
+            int index = 1;
+            foreach (var clip in clips)
+            {
+                var pad = new SoundPadViewModel
+                {
+                    Id = clip.Id,
+                    Name = clip.Name,
+                    Shortcut = string.IsNullOrEmpty(clip.ShortcutKey) ? $"{index}" : clip.ShortcutKey,
+                    Duration = clip.DurationText,
+                    Category = clip.Category,
+                    IsEmpty = false,
+                    IsPlaying = _audioService.SoundboardMixer.IsPlaying && _audioService.SoundboardMixer.CurrentPlayingClipName == clip.Name
+                };
+
+                string clipId = clip.Id;
+                pad.PlayCommand = new RelayCommand(() => TogglePlaySound(clipId));
+                pad.DeleteCommand = new RelayCommand(() => DeleteSound(clipId));
+
+                SoundPads.Add(pad);
+                index++;
+            }
+
+            // Fill empty pads so the grid maintains at least 12 pads (3 rows of 4 pads)
+            int totalPads = Math.Max(12, ((clips.Count + 3) / 4) * 4);
+            int emptyCount = Math.Max(4, totalPads - clips.Count);
+
+            for (int i = 0; i < emptyCount; i++)
+            {
+                var emptyPad = new SoundPadViewModel
+                {
+                    Id = $"empty_{i}",
+                    Name = "Empty pad",
+                    Duration = "Add sound",
+                    IsEmpty = true,
+                    PlayCommand = new RelayCommand(AddCustomSound)
+                };
+                SoundPads.Add(emptyPad);
+            }
+
+            OnPropertyChanged(nameof(SoundClipsCountText));
+            ApplySoundFilter();
+        });
+    }
+
+    private void ApplySoundFilter()
+    {
+        FilteredSoundPads.Clear();
+        foreach (var pad in SoundPads)
+        {
+            if (pad.IsEmpty)
+            {
+                FilteredSoundPads.Add(pad);
+                continue;
+            }
+
+            bool matchesCategory = SelectedCategory == "All sounds" ||
+                string.Equals(pad.Category, SelectedCategory, StringComparison.OrdinalIgnoreCase);
+
+            bool matchesSearch = string.IsNullOrWhiteSpace(SearchSoundText) ||
+                pad.Name.Contains(SearchSoundText, StringComparison.OrdinalIgnoreCase);
+
+            if (matchesCategory && matchesSearch)
+            {
+                FilteredSoundPads.Add(pad);
+            }
+        }
+    }
+
+    private void TogglePlaySound(string clipId)
+    {
+        if (_audioService.SoundboardMixer.IsPlaying)
+        {
+            _audioService.SoundboardMixer.StopAll();
+        }
+        else
+        {
+            _audioService.SoundboardMixer.PlayClip(clipId);
+        }
+    }
+
+    public void StopAllSounds()
+    {
+        _audioService.SoundboardMixer.StopAll();
+    }
+
+    public void AddCustomSound()
+    {
+        try
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Title = "Choose Sound Effect for Soundboard",
+                Filter = "Audio Files (*.mp3;*.wav;*.ogg;*.flac)|*.mp3;*.wav;*.ogg;*.flac|All Files (*.*)|*.*",
+                Multiselect = false
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                string rawName = Path.GetFileNameWithoutExtension(dialog.FileName);
+                // Clean name
+                string displayName = char.ToUpper(rawName[0]) + rawName.Substring(1).Replace('_', ' ').Replace('-', ' ');
+
+                int nextKey = _audioService.SoundboardMixer.Clips.Count + 1;
+                string shortcut = nextKey <= 9 ? nextKey.ToString() : "";
+
+                _audioService.SoundboardMixer.AddClip(displayName, dialog.FileName, shortcut, "Custom");
+                RefreshSoundPads();
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to add custom sound: {ex.Message}");
+        }
+    }
+
+    public void DeleteSound(string clipId)
+    {
+        _audioService.SoundboardMixer.DeleteClip(clipId);
+        RefreshSoundPads();
+    }
+
+    public void TriggerShortcut(string key)
+    {
+        if (key == "Space" || key == "0" || key == "NumPad0")
+        {
+            StopAllSounds();
+            return;
+        }
+
+        // Find pad with this shortcut key
+        var pad = SoundPads.FirstOrDefault(p => !p.IsEmpty && (p.Shortcut == key || $"NumPad{p.Shortcut}" == key || $"D{p.Shortcut}" == key));
+        if (pad != null)
+        {
+            TogglePlaySound(pad.Id);
+        }
+    }
+
+    private void OnSoundboardStateChanged()
+    {
+        App.Current?.Dispatcher.InvokeAsync(() =>
+        {
+            bool isPlaying = _audioService.SoundboardMixer.IsPlaying;
+            string clipName = _audioService.SoundboardMixer.CurrentPlayingClipName;
+
+            NowPlayingText = isPlaying ? $"Playing: {clipName}" : "Nothing playing";
+
+            foreach (var pad in SoundPads)
+            {
+                if (!pad.IsEmpty)
+                {
+                    pad.IsPlaying = isPlaying && pad.Name == clipName;
+                }
+            }
+        });
+    }
+
     public void Dispose()
     {
+        _audioService.SoundboardMixer.PlaybackStateChanged -= OnSoundboardStateChanged;
         _meterTimer.Stop();
         _meterTimer.Tick -= OnMeterTick;
         _audioService.DisposeAsync().GetAwaiter().GetResult();

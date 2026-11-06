@@ -26,11 +26,16 @@ public sealed class AudioService : IAsyncDisposable
     public SecurityManager SecurityManager { get; }
     public AdbManager AdbManager { get; }
     public AdbDeviceWatcher? AdbWatcher => _adbWatcher;
+    public SoundboardMixer SoundboardMixer { get; }
 
     public AudioService()
     {
         _mainJitterBuffer = new CircularJitterBuffer(48000, 1, 16, capacityMs: 500, LatencyMode.Balanced);
-        _mainRenderer = new WasapiAudioRenderer(_mainJitterBuffer);
+        SoundboardMixer = new SoundboardMixer();
+        _mainRenderer = new WasapiAudioRenderer(_mainJitterBuffer)
+        {
+            SoundboardMixer = SoundboardMixer
+        };
         _mainRenderer.SetDriftCompensator(new DriftCompensator(_mainJitterBuffer, 80));
         SecurityManager = new SecurityManager();
         AdbManager = new AdbManager();
@@ -154,7 +159,11 @@ public sealed class AudioService : IAsyncDisposable
             if (device == null) return false;
 
             _monitorJitterBuffer = new CircularJitterBuffer(48000, 1, 16, capacityMs: 500, LatencyMode.Balanced);
-            _monitorRenderer = new WasapiAudioRenderer(_monitorJitterBuffer);
+            _monitorRenderer = new WasapiAudioRenderer(_monitorJitterBuffer)
+            {
+                SoundboardMixer = SoundboardMixer,
+                IsMonitorOutput = true
+            };
 
             _monitorRenderer.Start(device, latencyMs);
             _server?.SetMonitorJitterBuffer(_monitorJitterBuffer);
