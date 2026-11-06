@@ -77,6 +77,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         DisconnectClientCommand = new RelayCommand(DisconnectClient, () => _serverState == ServerState.Streaming || _serverState == ServerState.ClientConnected);
         ToggleMonitoringCommand = new RelayCommand(ToggleMonitoring);
         OpenPairingDialogCommand = new RelayCommand(OpenPairingDialog);
+        InstallDriverCommand = new RelayCommand(async () => await InstallDriverAsync(), () => !_isInstallingDriver);
 
         // Metering Dispatcher Timer (~30 FPS)
         _meterTimer = new DispatcherTimer(DispatcherPriority.Render)
@@ -103,6 +104,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public ICommand DisconnectClientCommand { get; }
     public ICommand ToggleMonitoringCommand { get; }
     public ICommand OpenPairingDialogCommand { get; }
+    public ICommand InstallDriverCommand { get; }
 
     // Properties
     public ServerState ServerState
@@ -214,6 +216,26 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         get => _vbCableWarningMessage;
         private set => SetProperty(ref _vbCableWarningMessage, value);
+    }
+
+    private bool _isInstallingDriver = false;
+    public bool IsInstallingDriver
+    {
+        get => _isInstallingDriver;
+        private set
+        {
+            if (SetProperty(ref _isInstallingDriver, value))
+            {
+                CommandManager.InvalidateRequerySuggested();
+            }
+        }
+    }
+
+    private string _driverInstallStatus = "⚡ Install Driver (1-Click)";
+    public string DriverInstallStatus
+    {
+        get => _driverInstallStatus;
+        private set => SetProperty(ref _driverInstallStatus, value);
     }
 
     public bool IsMonitoringEnabled
@@ -676,6 +698,46 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             Owner = App.Current?.MainWindow
         };
         dialog.ShowDialog();
+    }
+
+    private async Task InstallDriverAsync()
+    {
+        if (IsInstallingDriver) return;
+        IsInstallingDriver = true;
+        DriverInstallStatus = "Installing driver...";
+
+        var progress = new Progress<string>(msg =>
+        {
+            DriverInstallStatus = msg;
+        });
+
+        bool success = await DriverInstaller.InstallVbCableAsync(progress).ConfigureAwait(true);
+
+        RefreshDevices();
+
+        if (!IsVbCableMissing)
+        {
+            DriverInstallStatus = "✅ Driver Ready!";
+            System.Windows.MessageBox.Show(
+                "VB-CABLE Virtual Microphone Driver installed successfully!\n\nVixxo is now ready to route audio to Discord, Zoom, Teams, and OBS.",
+                "Driver Installed",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information);
+        }
+        else
+        {
+            DriverInstallStatus = "⚡ Retry 1-Click Install";
+            if (!success)
+            {
+                System.Windows.MessageBox.Show(
+                    "Driver installation was not completed. Please run Vixxo as Administrator or install manually.",
+                    "Installation Incomplete",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
+            }
+        }
+
+        IsInstallingDriver = false;
     }
 
     private async void StartSelfTest()

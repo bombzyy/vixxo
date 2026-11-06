@@ -38,6 +38,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "..\artifacts\publish\windows\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "driver\*"; DestDir: "{tmp}\vbcable"; Flags: deleteafterinstall
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\Assets\app.ico"
@@ -45,6 +46,7 @@ Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\Assets\app.ico"; Tasks: desktopicon
 
 [Run]
+Filename: "{tmp}\vbcable\VBCABLE_Setup_x64.exe"; Parameters: "-i -h"; StatusMsg: "Installing VB-CABLE Virtual Audio Driver..."; Flags: runascurrentuser waituntilterminated; Check: NeedsVbCableInstall
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#MyAppName}}"; Flags: nowait postinstall skipifsilent
 
 [Code]
@@ -58,14 +60,7 @@ begin
   Result := DeviceFound;
 end;
 
-procedure CurStepChanged(CurStep: TSetupStep);
+function NeedsVbCableInstall(): Boolean;
 begin
-  if CurStep = ssPostInstall then
-  begin
-    if not IsVbCableInstalled() then
-    begin
-      MsgBox('Vixxo requires the VB-CABLE Virtual Audio Device to route your phone microphone to Discord, Zoom, Teams, and OBS.' + #13#10 + #13#10 +
-             'VB-CABLE was not detected. Please install it from https://vb-audio.com/Cable/ to enable virtual microphone input in Windows applications.', mbInformation, MB_OK);
-    end;
-  end;
+  Result := not IsVbCableInstalled();
 end;

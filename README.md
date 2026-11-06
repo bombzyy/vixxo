@@ -49,9 +49,9 @@ Most wireless microphone solutions suffer from major drawbacks:
 
 | Platform | Download Link | Description | Size |
 | :--- | :--- | :--- | :--- |
-| **Windows 10 / 11** | [**Download Vixxo-Setup-x64.exe**](https://github.com/bombzyy/vixxo/releases/download/v1.0.0/Vixxo-Setup-x64.exe) | Self-contained x64 installer (Includes .NET 8 runtime & Tray Manager) | `48.06 MB` |
+| **Windows 10 / 11** | [**Download Vixxo-Setup-x64.exe**](https://github.com/bombzyy/vixxo/releases/download/v1.0.0/Vixxo-Setup-x64.exe) | Self-contained x64 installer (**Bundled with VB-CABLE Silent Auto-Installer & 1-Click In-App Fix**) | `48.69 MB` |
 | **Android 8.0+** | [**Download vixxo-android-release.apk**](https://github.com/bombzyy/vixxo/releases/download/v1.0.0/vixxo-android-release.apk) | Optimized release APK (Jetpack Compose, background streaming service) | `10.44 MB` |
-| **Virtual Driver** | [**Download VB-CABLE Driver**](https://vb-audio.com/Cable/) | Required free virtual audio cable for Windows mic routing | Free |
+| **Virtual Driver** | **Auto-Bundled in Setup** | VB-CABLE is automatically installed by the setup wizard or via 1-click in-app button | Built-in |
 
 ---
 
@@ -78,6 +78,7 @@ Most wireless microphone solutions suffer from major drawbacks:
 
 ### 4. 💻 Native Windows Desktop Experience
 - Built on modern **.NET 8 LTS** and **WPF** with hardware-accelerated rendering.
+- **Zero-Config Virtual Driver Setup:** The official VB-CABLE virtual audio driver is pre-bundled in the Windows installer and installed silently during setup. If ever missing, the app UI features an instant **1-Click Driver Installer** button with automatic device refresh.
 - **System Tray Integration:** Minimizes unobtrusively to the system tray with global one-click mute and real-time status notifications.
 - **Local Audio Monitoring:** Listen to your microphone input in real-time through your headphones to test quality and levels before going live.
 - **Sleep & Wake Resilient:** Automatically pauses and rebinds audio devices on Windows suspend/resume events.
@@ -162,9 +163,9 @@ Most wireless microphone solutions suffer from major drawbacks:
 
 ### 1. Windows Setup
 1. Download and run [**`Vixxo-Setup-x64.exe`**](https://github.com/bombzyy/vixxo/releases/download/v1.0.0/Vixxo-Setup-x64.exe).
-2. Download and install [**VB-CABLE Driver**](https://vb-audio.com/Cable/) (restart PC if prompted).
+2. The setup wizard **automatically detects and silently installs the VB-CABLE driver** if it isn't already on your system! *(If skipped or uninstalled later, a **1-Click "Install Audio Driver"** button is built right into the app).*
 3. Launch **Vixxo** from your Start menu or desktop shortcut.
-4. Verify that the Virtual Microphone Routing dropdown shows **`CABLE Input (VB-Audio Virtual Cable)`**.
+4. Verify that the Virtual Microphone Routing dropdown shows **`CABLE Input (VB-Audio Virtual Cable)`** (auto-selected).
 
 ### 2. Android Setup
 1. Download and install [**`vixxo-android-release.apk`**](https://github.com/bombzyy/vixxo/releases/download/v1.0.0/vixxo-android-release.apk) on your phone.

@@ -69,10 +69,13 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Vertical">
-                    <TextBlock Text="⚠️ VB-CABLE Driver Not Found" FontWeight="Bold" Foreground="{StaticResource DangerBrush}" FontSize="14" />
-                    <TextBlock Text="Virtual microphone streaming requires VB-CABLE. Please install it, then click Refresh Endpoints." Foreground="#FECACA" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,0" />
+                    <TextBlock Text="⚠️ VB-CABLE Virtual Microphone Driver Not Detected" FontWeight="Bold" Foreground="{StaticResource DangerBrush}" FontSize="14" />
+                    <TextBlock Text="Windows requires a virtual audio device to route phone audio into Discord, OBS, Zoom, and Teams." Foreground="#FECACA" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,0" />
                 </StackPanel>
-                <Button Grid.Column="1" Content="Refresh Endpoints" Command="{Binding RefreshDevicesCommand}" Style="{StaticResource OutlinedButtonStyle}" VerticalAlignment="Center" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="{Binding DriverInstallStatus}" Command="{Binding InstallDriverCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0" FontWeight="SemiBold" Padding="14,6" />
+                    <Button Content="Refresh" Command="{Binding RefreshDevicesCommand}" Style="{StaticResource OutlinedButtonStyle}" Padding="10,6" />
+                </StackPanel>
             </Grid>
         </Border>
 

@@ -46,3 +46,7 @@ run_stderr.txt
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Cloudflare Wrangler
+.wrangler/
+
