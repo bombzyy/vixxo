@@ -289,8 +289,8 @@ public sealed class SoundboardMixer
                 catch { }
             }
 
-            // If no clips configured or first run, initialize default Valorant & Meme pack
-            if (_clips.Count == 0)
+            // First run: if no config file exists yet, initialize default Valorant & Meme pack
+            if (!File.Exists(_configFile))
             {
                 var defaults = new List<(string Name, string File, string Key, string Cat, string Dur)>
                 {

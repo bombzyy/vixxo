@@ -162,7 +162,16 @@ public sealed class AudioService : IAsyncDisposable
             _monitorRenderer = new WasapiAudioRenderer(_monitorJitterBuffer)
             {
                 SoundboardMixer = SoundboardMixer,
-                IsMonitorOutput = true
+                IsMonitorOutput = true,
+                GainDb = _mainRenderer.GainDb,
+                IsMuted = _mainRenderer.IsMuted,
+                IsLimiterEnabled = _mainRenderer.IsLimiterEnabled,
+                IsHighPassFilterEnabled = _mainRenderer.IsHighPassFilterEnabled,
+                IsNoiseGateEnabled = _mainRenderer.IsNoiseGateEnabled,
+                NoiseGateThresholdDb = _mainRenderer.NoiseGateThresholdDb,
+                IsVoiceChangerEnabled = _mainRenderer.IsVoiceChangerEnabled,
+                ActiveVoicePreset = _mainRenderer.ActiveVoicePreset,
+                VoicePitchSemitones = _mainRenderer.VoicePitchSemitones
             };
 
             _monitorRenderer.Start(device, latencyMs);

@@ -20,6 +20,9 @@ public sealed class AppSettings
     public float MicVolumeDb { get; set; } = 0.0f;
     public bool SendClipsToVirtualMic { get; set; } = true;
     public bool MonitorClipsInHeadphones { get; set; } = false;
+    public bool IsVoiceChangerEnabled { get; set; } = false;
+    public VoicePreset ActiveVoicePreset { get; set; } = VoicePreset.Bypass;
+    public float VoicePitchSemitones { get; set; } = 0.0f;
     public bool MinimizeToTray { get; set; } = true;
     public bool CloseToTray { get; set; } = true;
 }

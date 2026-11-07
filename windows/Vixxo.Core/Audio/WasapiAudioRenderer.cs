@@ -22,6 +22,40 @@ public sealed class WasapiAudioRenderer : IDisposable
     public bool IsMonitorOutput { get; set; } = false;
     public SoundboardMixer? SoundboardMixer { get; set; }
 
+    private bool _isVoiceChangerEnabled = false;
+    private VoicePreset _voicePreset = VoicePreset.Bypass;
+    private float _voicePitchSemitones = 0f;
+
+    public bool IsVoiceChangerEnabled
+    {
+        get => _isVoiceChangerEnabled;
+        set
+        {
+            _isVoiceChangerEnabled = value;
+            if (_waveProvider != null) _waveProvider.VoiceChanger.IsEnabled = value;
+        }
+    }
+
+    public VoicePreset ActiveVoicePreset
+    {
+        get => _voicePreset;
+        set
+        {
+            _voicePreset = value;
+            if (_waveProvider != null) _waveProvider.VoiceChanger.ActivePreset = value;
+        }
+    }
+
+    public float VoicePitchSemitones
+    {
+        get => _voicePitchSemitones;
+        set
+        {
+            _voicePitchSemitones = value;
+            if (_waveProvider != null) _waveProvider.VoiceChanger.PitchSemitones = value;
+        }
+    }
+
     public WasapiAudioRenderer(CircularJitterBuffer jitterBuffer)
     {
         _jitterBuffer = jitterBuffer ?? throw new ArgumentNullException(nameof(jitterBuffer));
@@ -127,6 +161,9 @@ public sealed class WasapiAudioRenderer : IDisposable
             _waveProvider.SetDriftCompensator(_driftCompensator);
             _waveProvider.SoundboardMixer = SoundboardMixer;
             _waveProvider.IsMonitorOutput = IsMonitorOutput;
+            _waveProvider.VoiceChanger.IsEnabled = _isVoiceChangerEnabled;
+            _waveProvider.VoiceChanger.ActivePreset = _voicePreset;
+            _waveProvider.VoiceChanger.PitchSemitones = _voicePitchSemitones;
 
             try
             {

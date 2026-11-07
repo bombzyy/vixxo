@@ -72,6 +72,11 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private string _searchSoundText = string.Empty;
     private string _selectedCategory = "All sounds";
 
+    // Real-Time Voice Changer
+    private bool _isVoiceChangerEnabled = false;
+    private VoicePreset _activeVoicePreset = VoicePreset.Bypass;
+    private float _voicePitchSemitones = 0.0f;
+
     public MainViewModel(AudioService audioService, SettingsService settingsService)
     {
         _audioService = audioService ?? throw new ArgumentNullException(nameof(audioService));
@@ -103,6 +108,16 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         // Soundboard Commands
         StopAllSoundsCommand = new RelayCommand(StopAllSounds);
         AddSoundCommand = new RelayCommand(AddCustomSound);
+
+        // Voice Changer Commands
+        SelectGirlPresetCommand = new RelayCommand(() => { ActiveVoicePreset = VoicePreset.Girl; IsVoiceChangerEnabled = true; });
+        SelectLadyPresetCommand = new RelayCommand(() => { ActiveVoicePreset = VoicePreset.Lady; IsVoiceChangerEnabled = true; });
+        SelectDemonPresetCommand = new RelayCommand(() => { ActiveVoicePreset = VoicePreset.Demon; IsVoiceChangerEnabled = true; });
+        SelectHeliumPresetCommand = new RelayCommand(() => { ActiveVoicePreset = VoicePreset.Helium; IsVoiceChangerEnabled = true; });
+        SelectRobotPresetCommand = new RelayCommand(() => { ActiveVoicePreset = VoicePreset.Robot; IsVoiceChangerEnabled = true; });
+        SelectRadioPresetCommand = new RelayCommand(() => { ActiveVoicePreset = VoicePreset.Radio; IsVoiceChangerEnabled = true; });
+        SelectEchoPresetCommand = new RelayCommand(() => { ActiveVoicePreset = VoicePreset.Echo; IsVoiceChangerEnabled = true; });
+        SelectBypassPresetCommand = new RelayCommand(() => { ActiveVoicePreset = VoicePreset.Bypass; IsVoiceChangerEnabled = false; });
 
         // Listen for Soundboard playback events
         _audioService.SoundboardMixer.PlaybackStateChanged += OnSoundboardStateChanged;
@@ -145,6 +160,16 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     // Soundboard Commands
     public ICommand StopAllSoundsCommand { get; }
     public ICommand AddSoundCommand { get; }
+
+    // Voice Changer Commands
+    public ICommand SelectGirlPresetCommand { get; }
+    public ICommand SelectLadyPresetCommand { get; }
+    public ICommand SelectDemonPresetCommand { get; }
+    public ICommand SelectHeliumPresetCommand { get; }
+    public ICommand SelectRobotPresetCommand { get; }
+    public ICommand SelectRadioPresetCommand { get; }
+    public ICommand SelectEchoPresetCommand { get; }
+    public ICommand SelectBypassPresetCommand { get; }
 
     // Navigation Properties
     public string CurrentTab
@@ -530,6 +555,96 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public string NoiseGateThresholdText => $"{NoiseGateThresholdDb:0.0} dB";
 
+    // Real-Time Voice Changer Properties
+    public bool IsVoiceChangerEnabled
+    {
+        get => _isVoiceChangerEnabled;
+        set
+        {
+            if (SetProperty(ref _isVoiceChangerEnabled, value))
+            {
+                _audioService.MainRenderer.IsVoiceChangerEnabled = value;
+                if (_audioService.MonitorRenderer != null)
+                {
+                    _audioService.MonitorRenderer.IsVoiceChangerEnabled = value;
+                }
+                _settingsService.CurrentSettings.IsVoiceChangerEnabled = value;
+                _settingsService.Save();
+                OnPropertyChanged(nameof(VoiceChangerStatusText));
+                OnPropertyChanged(nameof(IsGirlActive));
+                OnPropertyChanged(nameof(IsLadyActive));
+                OnPropertyChanged(nameof(IsDemonActive));
+                OnPropertyChanged(nameof(IsHeliumActive));
+                OnPropertyChanged(nameof(IsRobotActive));
+                OnPropertyChanged(nameof(IsRadioActive));
+                OnPropertyChanged(nameof(IsEchoActive));
+                OnPropertyChanged(nameof(IsBypassActive));
+            }
+        }
+    }
+
+    public VoicePreset ActiveVoicePreset
+    {
+        get => _activeVoicePreset;
+        set
+        {
+            if (SetProperty(ref _activeVoicePreset, value))
+            {
+                _audioService.MainRenderer.ActiveVoicePreset = value;
+                if (_audioService.MonitorRenderer != null)
+                {
+                    _audioService.MonitorRenderer.ActiveVoicePreset = value;
+                }
+                _settingsService.CurrentSettings.ActiveVoicePreset = value;
+                _settingsService.Save();
+
+                _voicePitchSemitones = _audioService.MainRenderer.VoicePitchSemitones;
+                OnPropertyChanged(nameof(VoicePitchSemitones));
+                OnPropertyChanged(nameof(VoicePitchText));
+                OnPropertyChanged(nameof(VoiceChangerStatusText));
+                OnPropertyChanged(nameof(IsGirlActive));
+                OnPropertyChanged(nameof(IsLadyActive));
+                OnPropertyChanged(nameof(IsDemonActive));
+                OnPropertyChanged(nameof(IsHeliumActive));
+                OnPropertyChanged(nameof(IsRobotActive));
+                OnPropertyChanged(nameof(IsRadioActive));
+                OnPropertyChanged(nameof(IsEchoActive));
+                OnPropertyChanged(nameof(IsBypassActive));
+            }
+        }
+    }
+
+    public float VoicePitchSemitones
+    {
+        get => _voicePitchSemitones;
+        set
+        {
+            if (SetProperty(ref _voicePitchSemitones, value))
+            {
+                _audioService.MainRenderer.VoicePitchSemitones = value;
+                if (_audioService.MonitorRenderer != null)
+                {
+                    _audioService.MonitorRenderer.VoicePitchSemitones = value;
+                }
+                _settingsService.CurrentSettings.VoicePitchSemitones = value;
+                _settingsService.Save();
+                OnPropertyChanged(nameof(VoicePitchText));
+            }
+        }
+    }
+
+    public string VoicePitchText => $"{VoicePitchSemitones:+0.0;-0.0;0.0} st";
+    public string VoiceChangerStatusText => IsVoiceChangerEnabled ? $"Active: {ActiveVoicePreset}" : "Voice Changer Off";
+
+    public bool IsGirlActive => IsVoiceChangerEnabled && ActiveVoicePreset == VoicePreset.Girl;
+    public bool IsLadyActive => IsVoiceChangerEnabled && ActiveVoicePreset == VoicePreset.Lady;
+    public bool IsDemonActive => IsVoiceChangerEnabled && ActiveVoicePreset == VoicePreset.Demon;
+    public bool IsHeliumActive => IsVoiceChangerEnabled && ActiveVoicePreset == VoicePreset.Helium;
+    public bool IsRobotActive => IsVoiceChangerEnabled && ActiveVoicePreset == VoicePreset.Robot;
+    public bool IsRadioActive => IsVoiceChangerEnabled && ActiveVoicePreset == VoicePreset.Radio;
+    public bool IsEchoActive => IsVoiceChangerEnabled && ActiveVoicePreset == VoicePreset.Echo;
+    public bool IsBypassActive => !IsVoiceChangerEnabled || ActiveVoicePreset == VoicePreset.Bypass;
+
     public LatencyMode SelectedLatencyMode
     {
         get => _selectedLatencyMode;
@@ -616,6 +731,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _micVolumeDb = s.MicVolumeDb;
         _sendClipsToVirtualMic = s.SendClipsToVirtualMic;
         _monitorClipsInHeadphones = s.MonitorClipsInHeadphones;
+        _isVoiceChangerEnabled = s.IsVoiceChangerEnabled;
+        _activeVoicePreset = s.ActiveVoicePreset;
+        _voicePitchSemitones = s.VoicePitchSemitones;
 
         // Apply audio states
         _audioService.MainRenderer.GainDb = _gainDb;
@@ -624,6 +742,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _audioService.MainRenderer.IsHighPassFilterEnabled = _isHighPassFilterEnabled;
         _audioService.MainRenderer.IsNoiseGateEnabled = _isNoiseGateEnabled;
         _audioService.MainRenderer.NoiseGateThresholdDb = _noiseGateThresholdDb;
+        _audioService.MainRenderer.IsVoiceChangerEnabled = _isVoiceChangerEnabled;
+        _audioService.MainRenderer.ActiveVoicePreset = _activeVoicePreset;
+        _audioService.MainRenderer.VoicePitchSemitones = _voicePitchSemitones;
         _audioService.SetLatencyMode(_selectedLatencyMode);
 
         _audioService.SoundboardMixer.SoundboardVolumeDb = _soundboardVolumeDb;

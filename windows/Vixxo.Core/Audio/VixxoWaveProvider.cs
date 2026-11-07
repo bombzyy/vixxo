@@ -22,6 +22,7 @@ public sealed class VixxoWaveProvider : IWaveProvider
     private int _driftAdjustmentCounter;
 
     public AudioDspProcessor DspProcessor { get; }
+    public VoiceChangerProcessor VoiceChanger { get; }
     public bool IsMonitorOutput { get; set; } = false;
     public SoundboardMixer? SoundboardMixer { get; set; }
 
@@ -44,6 +45,8 @@ public sealed class VixxoWaveProvider : IWaveProvider
             IsHighPassFilterEnabled = false,
             IsNoiseGateEnabled = false
         };
+
+        VoiceChanger = new VoiceChangerProcessor(sampleRate: _outputFormat.SampleRate);
     }
 
     public WaveFormat WaveFormat => _outputFormat;
@@ -143,6 +146,9 @@ public sealed class VixxoWaveProvider : IWaveProvider
 
         // Apply DSP (HPF 80 Hz + Noise Gate)
         DspProcessor.ProcessMono(_floatScratchBuffer.AsSpan(0, framesRequested));
+
+        // Apply Real-Time Voice Changer (Girl, Lady, Demon, Robot, Radio, etc.)
+        VoiceChanger.ProcessMono(_floatScratchBuffer.AsSpan(0, framesRequested));
 
         // Mix soundboard clips before Limiter & Output gain
         if (IsMonitorOutput)
