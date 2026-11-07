@@ -85,6 +85,25 @@
                         </StackPanel>
                     </Button>
 
+                    <!-- Voice Changer Nav Button (Red Arrow Location) -->
+                    <Button Command="{Binding SelectVoiceChangerCommand}" Margin="0,0,0,4">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SidebarNavButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsVoiceChangerTabActive}" Value="True">
+                                        <Setter Property="Background" Value="#132B3A" />
+                                        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                        <Setter Property="BorderThickness" Value="2,0,0,0" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="⚡" FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Voice Changer" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
                     <!-- Settings Nav Button -->
                     <Button Command="{Binding SelectSettingsCommand}">
                         <Button.Style>
@@ -280,216 +299,24 @@
                                 </StackPanel>
                             </Border>
 
-                            <!-- Real-Time Voice Changer -->
+                            <!-- Quick Voice Changer Status Banner in Studio -->
                             <Border Style="{StaticResource CardBorderStyle}" Margin="0,14,0,0">
-                                <StackPanel Orientation="Vertical">
-                                    <Grid Margin="0,0,0,10">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Text="⚡ Real-Time Voice Changer" FontWeight="Bold" FontSize="13" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,4">
+                                            <TextBlock Text="⚡ Voice Changer" FontWeight="Bold" FontSize="13" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,8,0" />
                                             <Border Background="#1E293B" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
-                                                <TextBlock Text="&lt; 5ms" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" />
+                                                <TextBlock Text="{Binding VoiceChangerStatusText}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" />
                                             </Border>
                                         </StackPanel>
-                                        <CheckBox Grid.Column="1" IsChecked="{Binding IsVoiceChangerEnabled}" VerticalAlignment="Center">
-                                            <TextBlock Text="Enable" FontSize="12" FontWeight="SemiBold" />
-                                        </CheckBox>
-                                    </Grid>
-
-                                    <!-- Presets 4x2 Grid -->
-                                    <Grid Margin="0,0,0,4">
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                        </Grid.RowDefinitions>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-
-                                        <!-- Row 0: Girl Voice & Lady Voice -->
-                                        <Button Grid.Row="0" Grid.Column="0" Command="{Binding SelectGirlPresetCommand}" Margin="0,0,4,6">
-                                            <Button.Style>
-                                                <Style TargetType="Button" BasedOn="{StaticResource OutlinedButtonStyle}">
-                                                    <Setter Property="Height" Value="38" />
-                                                    <Setter Property="Padding" Value="8,4" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsGirlActive}" Value="True">
-                                                            <Setter Property="Background" Value="#25E879F9" />
-                                                            <Setter Property="BorderBrush" Value="#E879F9" />
-                                                            <Setter Property="Foreground" Value="#F472B6" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Button.Style>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <TextBlock Text="👧" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                                <TextBlock Text="Girl Voice" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" />
-                                            </StackPanel>
-                                        </Button>
-
-                                        <Button Grid.Row="0" Grid.Column="1" Command="{Binding SelectLadyPresetCommand}" Margin="4,0,0,6">
-                                            <Button.Style>
-                                                <Style TargetType="Button" BasedOn="{StaticResource OutlinedButtonStyle}">
-                                                    <Setter Property="Height" Value="38" />
-                                                    <Setter Property="Padding" Value="8,4" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsLadyActive}" Value="True">
-                                                            <Setter Property="Background" Value="#25A855F7" />
-                                                            <Setter Property="BorderBrush" Value="#A855F7" />
-                                                            <Setter Property="Foreground" Value="#C084FC" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Button.Style>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <TextBlock Text="👩" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                                <TextBlock Text="Lady Voice" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" />
-                                            </StackPanel>
-                                        </Button>
-
-                                        <!-- Row 1: Demon & Helium -->
-                                        <Button Grid.Row="1" Grid.Column="0" Command="{Binding SelectDemonPresetCommand}" Margin="0,0,4,6">
-                                            <Button.Style>
-                                                <Style TargetType="Button" BasedOn="{StaticResource OutlinedButtonStyle}">
-                                                    <Setter Property="Height" Value="38" />
-                                                    <Setter Property="Padding" Value="8,4" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsDemonActive}" Value="True">
-                                                            <Setter Property="Background" Value="#25EF4444" />
-                                                            <Setter Property="BorderBrush" Value="#EF4444" />
-                                                            <Setter Property="Foreground" Value="#F87171" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Button.Style>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <TextBlock Text="👹" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                                <TextBlock Text="Demon" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" />
-                                            </StackPanel>
-                                        </Button>
-
-                                        <Button Grid.Row="1" Grid.Column="1" Command="{Binding SelectHeliumPresetCommand}" Margin="4,0,0,6">
-                                            <Button.Style>
-                                                <Style TargetType="Button" BasedOn="{StaticResource OutlinedButtonStyle}">
-                                                    <Setter Property="Height" Value="38" />
-                                                    <Setter Property="Padding" Value="8,4" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsHeliumActive}" Value="True">
-                                                            <Setter Property="Background" Value="#25F59E0B" />
-                                                            <Setter Property="BorderBrush" Value="#F59E0B" />
-                                                            <Setter Property="Foreground" Value="#FBBF24" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Button.Style>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <TextBlock Text="🎈" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                                <TextBlock Text="Helium" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" />
-                                            </StackPanel>
-                                        </Button>
-
-                                        <!-- Row 2: Robot & Radio -->
-                                        <Button Grid.Row="2" Grid.Column="0" Command="{Binding SelectRobotPresetCommand}" Margin="0,0,4,6">
-                                            <Button.Style>
-                                                <Style TargetType="Button" BasedOn="{StaticResource OutlinedButtonStyle}">
-                                                    <Setter Property="Height" Value="38" />
-                                                    <Setter Property="Padding" Value="8,4" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsRobotActive}" Value="True">
-                                                            <Setter Property="Background" Value="#2506B6D4" />
-                                                            <Setter Property="BorderBrush" Value="#06B6D4" />
-                                                            <Setter Property="Foreground" Value="#22D3EE" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Button.Style>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <TextBlock Text="🤖" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                                <TextBlock Text="Robot" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" />
-                                            </StackPanel>
-                                        </Button>
-
-                                        <Button Grid.Row="2" Grid.Column="1" Command="{Binding SelectRadioPresetCommand}" Margin="4,0,0,6">
-                                            <Button.Style>
-                                                <Style TargetType="Button" BasedOn="{StaticResource OutlinedButtonStyle}">
-                                                    <Setter Property="Height" Value="38" />
-                                                    <Setter Property="Padding" Value="8,4" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsRadioActive}" Value="True">
-                                                            <Setter Property="Background" Value="#2510B981" />
-                                                            <Setter Property="BorderBrush" Value="#10B981" />
-                                                            <Setter Property="Foreground" Value="#34D399" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Button.Style>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <TextBlock Text="📻" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                                <TextBlock Text="Radio" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" />
-                                            </StackPanel>
-                                        </Button>
-
-                                        <!-- Row 3: Echo & Clean Bypass -->
-                                        <Button Grid.Row="3" Grid.Column="0" Command="{Binding SelectEchoPresetCommand}" Margin="0,0,4,0">
-                                            <Button.Style>
-                                                <Style TargetType="Button" BasedOn="{StaticResource OutlinedButtonStyle}">
-                                                    <Setter Property="Height" Value="38" />
-                                                    <Setter Property="Padding" Value="8,4" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsEchoActive}" Value="True">
-                                                            <Setter Property="Background" Value="#253B82F6" />
-                                                            <Setter Property="BorderBrush" Value="#3B82F6" />
-                                                            <Setter Property="Foreground" Value="#60A5FA" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Button.Style>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <TextBlock Text="🏛️" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                                <TextBlock Text="Stadium" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" />
-                                            </StackPanel>
-                                        </Button>
-
-                                        <Button Grid.Row="3" Grid.Column="1" Command="{Binding SelectBypassPresetCommand}" Margin="4,0,0,0">
-                                            <Button.Style>
-                                                <Style TargetType="Button" BasedOn="{StaticResource OutlinedButtonStyle}">
-                                                    <Setter Property="Height" Value="38" />
-                                                    <Setter Property="Padding" Value="8,4" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsBypassActive}" Value="True">
-                                                            <Setter Property="Background" Value="#2564748B" />
-                                                            <Setter Property="BorderBrush" Value="#64748B" />
-                                                            <Setter Property="Foreground" Value="#E2E8F0" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Button.Style>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <TextBlock Text="🎙️" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                                <TextBlock Text="Clean / Off" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" />
-                                            </StackPanel>
-                                        </Button>
-                                    </Grid>
-
-                                    <!-- Pitch Shift Fine-Tuning Slider -->
-                                    <Grid Margin="0,10,0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Fine-tune pitch:" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" />
-                                        <TextBlock Grid.Column="1" Text="{Binding VoicePitchText}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" FontFamily="Consolas" />
-                                    </Grid>
-                                    <Slider Minimum="-12.0" Maximum="12.0" Value="{Binding VoicePitchSemitones}" Margin="0,0,0,6" />
-
-                                    <TextBlock Text="💡 Formants automatically adapt to sound naturally female (Girl/Lady) or monstrous (Demon) without chipmunk effect." FontSize="10" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" />
-                                </StackPanel>
+                                        <TextBlock Text="RTX 4050 AI Neural &amp; DSP Engine • Dedicated Workspace" FontSize="11" Foreground="{StaticResource TextMutedBrush}" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Content="Open Studio ›" Command="{Binding SelectVoiceChangerCommand}" Style="{StaticResource OutlinedButtonStyle}" Padding="12,6" FontSize="11" VerticalAlignment="Center" />
+                                </Grid>
                             </Border>
                         </StackPanel>
                     </ScrollViewer>
@@ -799,7 +626,301 @@
             </Grid>
 
             <!-- ===================================================== -->
-            <!-- VIEW C: SETTINGS VIEW                                 -->
+            <!-- VIEW C: VOICE CHANGER VIEW (AI NEURAL & DSP)         -->
+            <!-- ===================================================== -->
+            <Grid Grid.Row="2" Visibility="{Binding IsVoiceChangerTabActive, Converter={StaticResource BoolToVis}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" /> <!-- Header -->
+                    <RowDefinition Height="Auto" /> <!-- Sub-bar: Engine switcher & Custom Model -->
+                    <RowDefinition Height="*" />    <!-- Main 2-column workspace -->
+                </Grid.RowDefinitions>
+
+                <!-- 1. Header Bar -->
+                <Grid Grid.Row="0" Margin="0,0,0,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Vertical">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Real-Time Voice Changer" FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,10,0" />
+                            <Border Background="#162B3D" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                                <TextBlock Text="RTX 4050 ACCELERATED" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" />
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Text="AI Neural Voice Conversion &amp; Low-Latency Gaming Vocoder" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0" />
+                    </StackPanel>
+
+                    <!-- Top Right Quick Controls -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Background="{StaticResource SurfaceSubtleBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,6" Margin="0,0,10,0">
+                            <CheckBox IsChecked="{Binding IsMonitoringEnabled}" VerticalAlignment="Center">
+                                <TextBlock Text="🎧 Listen Live in Headphones" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                            </CheckBox>
+                        </Border>
+                        <Border Background="#102538" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1" CornerRadius="8" Padding="14,6">
+                            <CheckBox IsChecked="{Binding IsVoiceChangerEnabled}" VerticalAlignment="Center">
+                                <TextBlock Text="⚡ Enable Voice Changer" FontSize="12" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" />
+                            </CheckBox>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+
+                <!-- 2. Sub-bar: Engine Switcher & Actions -->
+                <Border Grid.Row="1" Background="{StaticResource SurfaceElevatedBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="12,8" Margin="0,0,0,16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Engine Selector Tabs -->
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="ENGINE MODE:" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,10,0" />
+
+                            <!-- AI Neural Tab -->
+                            <Button Command="{Binding SelectAiEngineCommand}" Margin="0,0,6,0">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource OutlinedButtonStyle}">
+                                        <Setter Property="Padding" Value="14,6" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsAiEngineActive}" Value="True">
+                                                <Setter Property="Background" Value="{StaticResource PrimaryAccentGradient}" />
+                                                <Setter Property="Foreground" Value="#060D1A" />
+                                                <Setter Property="BorderThickness" Value="0" />
+                                                <Setter Property="FontWeight" Value="Bold" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🧠" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="AI Neural (RVC v2)" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Fast DSP Tab -->
+                            <Button Command="{Binding SelectFastDspCommand}">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource OutlinedButtonStyle}">
+                                        <Setter Property="Padding" Value="14,6" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsFastDspActive}" Value="True">
+                                                <Setter Property="Background" Value="{StaticResource PrimaryAccentGradient}" />
+                                                <Setter Property="Foreground" Value="#060D1A" />
+                                                <Setter Property="BorderThickness" Value="0" />
+                                                <Setter Property="FontWeight" Value="Bold" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="⚡" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="Fast DSP (&lt; 5ms)" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- Right: Custom Model Import -->
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Content="+ Import Custom Model (.pth / .onnx)" Command="{Binding ImportCustomModelCommand}" Style="{StaticResource PrimaryButtonStyle}" Padding="14,6" FontSize="11" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- 3. Main Workspace: Voice Cards Grid + Tuning Console -->
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.7*" />
+                        <ColumnDefinition Width="18" />
+                        <ColumnDefinition Width="1*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Left: Voice Models Grid -->
+                    <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding VoiceModelCards}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="2" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Command="{Binding SelectCommand}" Margin="4,4,4,6" Cursor="Hand">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="CardBorder" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="14">
+                                                    <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto" />
+                                                            <RowDefinition Height="Auto" />
+                                                            <RowDefinition Height="*" />
+                                                            <RowDefinition Height="Auto" />
+                                                        </Grid.RowDefinitions>
+
+                                                        <!-- Row 0: Emoji + Tag -->
+                                                        <Grid Grid.Row="0" Margin="0,0,0,8">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <Border Width="40" Height="40" Background="{StaticResource SurfaceSubtleBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="20" HorizontalAlignment="Left">
+                                                                <TextBlock Text="{Binding AvatarEmoji}" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                            </Border>
+
+                                                            <Border Grid.Column="1" Background="#111B2C" BorderBrush="{Binding TagColor}" BorderThickness="1" CornerRadius="4" Padding="6,2" VerticalAlignment="Top">
+                                                                <TextBlock Text="{Binding Tag}" FontSize="9" FontWeight="Bold" Foreground="{Binding TagColor}" />
+                                                            </Border>
+                                                        </Grid>
+
+                                                        <!-- Row 1: Name & Subtitle -->
+                                                        <StackPanel Grid.Row="1" Margin="0,0,0,6">
+                                                            <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" />
+                                                            <TextBlock Text="{Binding Subtitle}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}" Margin="0,1,0,0" />
+                                                        </StackPanel>
+
+                                                        <!-- Row 2: Description -->
+                                                        <TextBlock Grid.Row="2" Text="{Binding Description}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="15" Margin="0,0,0,10" MinHeight="30" />
+
+                                                        <!-- Row 3: Pitch Badge & Selection Status -->
+                                                        <Grid Grid.Row="3">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <Border Background="{StaticResource SurfaceElevatedBrush}" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left">
+                                                                <TextBlock Text="{Binding DefaultPitch, StringFormat='Pitch: {0:+0.0;-0.0;0.0} st'}" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" FontFamily="Consolas" />
+                                                            </Border>
+
+                                                            <Border Grid.Column="1" x:Name="StatusBadge" Background="Transparent" CornerRadius="4" Padding="6,2">
+                                                                <TextBlock x:Name="StatusText" Text="SELECT" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" />
+                                                            </Border>
+                                                        </Grid>
+                                                    </Grid>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="CardBorder" Property="BorderBrush" Value="{StaticResource AccentHoverBrush}" />
+                                                        <Setter TargetName="CardBorder" Property="Background" Value="#152136" />
+                                                    </Trigger>
+                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                        <Setter TargetName="CardBorder" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                                        <Setter TargetName="CardBorder" Property="BorderThickness" Value="2" />
+                                                        <Setter TargetName="CardBorder" Property="Background" Value="#142A3D" />
+                                                        <Setter TargetName="StatusBadge" Property="Background" Value="#1E4461" />
+                                                        <Setter TargetName="StatusText" Property="Text" Value="● ACTIVE" />
+                                                        <Setter TargetName="StatusText" Property="Foreground" Value="{StaticResource AccentBrush}" />
+                                                    </DataTrigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <!-- Right: Hardware & Real-Time Tuning Console -->
+                    <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Orientation="Vertical" Margin="0,0,4,0">
+                            <!-- Hardware Acceleration Card -->
+                            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
+                                <StackPanel Orientation="Vertical">
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Hardware Acceleration" FontWeight="Bold" FontSize="13" Foreground="{StaticResource TextPrimaryBrush}" />
+                                        <Border Grid.Column="1" Background="#102538" CornerRadius="4" Padding="6,2">
+                                            <TextBlock Text="NVIDIA CUDA" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" />
+                                        </Border>
+                                    </Grid>
+
+                                    <Border Background="{StaticResource SurfaceSubtleBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                                        <StackPanel Orientation="Vertical">
+                                            <TextBlock Text="{Binding GpuHardwareText}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4" />
+                                            <Grid Margin="0,4,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="PROCESSING LATENCY" FontSize="9" Foreground="{StaticResource TextMutedBrush}" />
+                                                    <TextBlock Text="{Binding GpuLatencyText}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource SuccessBrush}" FontFamily="Consolas" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="TENSOR PRECISION" FontSize="9" Foreground="{StaticResource TextMutedBrush}" />
+                                                    <TextBlock Text="FP16 Mixed" FontSize="12" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" FontFamily="Consolas" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Ellipse Width="7" Height="7" Fill="{StaticResource SuccessBrush}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                        <TextBlock Text="Active &amp; streaming to CABLE Input" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Real-Time Voice Tuning Console -->
+                            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
+                                <StackPanel Orientation="Vertical">
+                                    <TextBlock Text="Real-Time Tuning" FontWeight="Bold" FontSize="13" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,12" />
+
+                                    <!-- Pitch Transpose -->
+                                    <Grid Margin="0,0,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Pitch Semitones Shift:" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" />
+                                        <TextBlock Grid.Column="1" Text="{Binding VoicePitchText}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" FontFamily="Consolas" />
+                                    </Grid>
+                                    <Slider Minimum="-12.0" Maximum="12.0" Value="{Binding VoicePitchSemitones}" Margin="0,0,0,14" />
+
+                                    <!-- Formant Shift -->
+                                    <Grid Margin="0,0,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Formant / Vocal Tract Shift:" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" />
+                                        <TextBlock Grid.Column="1" Text="{Binding FormantShiftText}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" FontFamily="Consolas" />
+                                    </Grid>
+                                    <Slider Minimum="-5.0" Maximum="5.0" Value="{Binding FormantShift}" Margin="0,0,0,14" />
+
+                                    <!-- Index Rate -->
+                                    <Grid Margin="0,0,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Index Feature Weight (RVC):" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" />
+                                        <TextBlock Grid.Column="1" Text="{Binding IndexRateText}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" FontFamily="Consolas" />
+                                    </Grid>
+                                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding IndexRate}" Margin="0,0,0,6" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Tips & Free Models Guide -->
+                            <Border Background="{StaticResource SurfaceSubtleBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="14">
+                                <StackPanel Orientation="Vertical">
+                                    <TextBlock Text="💡 AI Girl &amp; Lady Pro-Tips" FontWeight="Bold" FontSize="12" Foreground="{StaticResource AccentBrush}" Margin="0,0,0,6" />
+                                    <TextBlock Text="• 'Sweet Anime Girl' cuts low frequencies below 220 Hz and enhances throat resonance to completely remove male vocal tones." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,6" />
+                                    <TextBlock Text="• 'Mature Lady' gives a natural, deep, confident female voice ideal for casual Discord and Valorant team chat." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,6" />
+                                    <TextBlock Text="• Free RVC Models: You can download thousands of characters from weights.gg and drop them directly using '+ Import Custom Model'." FontSize="11" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Grid>
+
+            <!-- ===================================================== -->
+            <!-- VIEW D: SETTINGS VIEW                                 -->
             <!-- ===================================================== -->
             <Grid Grid.Row="2" Visibility="{Binding IsSettingsTabActive, Converter={StaticResource BoolToVis}}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">

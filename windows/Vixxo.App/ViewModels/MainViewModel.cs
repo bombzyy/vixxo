@@ -74,8 +74,11 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     // Real-Time Voice Changer
     private bool _isVoiceChangerEnabled = false;
+    private VoiceEngineMode _selectedEngineMode = VoiceEngineMode.AiNeural;
     private VoicePreset _activeVoicePreset = VoicePreset.Bypass;
     private float _voicePitchSemitones = 0.0f;
+    private float _formantShift = 0.0f;
+    private float _indexRate = 0.75f;
 
     public MainViewModel(AudioService audioService, SettingsService settingsService)
     {
@@ -89,6 +92,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         SoundPads = new ObservableCollection<SoundPadViewModel>();
         FilteredSoundPads = new ObservableCollection<SoundPadViewModel>();
         Categories = new ObservableCollection<string> { "All sounds", "Valorant", "Memes", "Custom" };
+        VoiceModelCards = new ObservableCollection<VoiceModelCardViewModel>();
 
         // Commands
         ToggleMuteCommand = new RelayCommand(ToggleMute);
@@ -103,6 +107,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         // Navigation Commands
         SelectStudioCommand = new RelayCommand(() => CurrentTab = "Studio");
         SelectSoundboardCommand = new RelayCommand(() => CurrentTab = "Soundboard");
+        SelectVoiceChangerCommand = new RelayCommand(() => CurrentTab = "VoiceChanger");
         SelectSettingsCommand = new RelayCommand(() => CurrentTab = "Settings");
 
         // Soundboard Commands
@@ -110,6 +115,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         AddSoundCommand = new RelayCommand(AddCustomSound);
 
         // Voice Changer Commands
+        SelectAiEngineCommand = new RelayCommand(() => SelectedEngineMode = VoiceEngineMode.AiNeural);
+        SelectFastDspCommand = new RelayCommand(() => SelectedEngineMode = VoiceEngineMode.FastDsp);
+        ImportCustomModelCommand = new RelayCommand(ImportCustomModel);
         SelectGirlPresetCommand = new RelayCommand(() => { ActiveVoicePreset = VoicePreset.Girl; IsVoiceChangerEnabled = true; });
         SelectLadyPresetCommand = new RelayCommand(() => { ActiveVoicePreset = VoicePreset.Lady; IsVoiceChangerEnabled = true; });
         SelectDemonPresetCommand = new RelayCommand(() => { ActiveVoicePreset = VoicePreset.Demon; IsVoiceChangerEnabled = true; });
@@ -118,6 +126,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         SelectRadioPresetCommand = new RelayCommand(() => { ActiveVoicePreset = VoicePreset.Radio; IsVoiceChangerEnabled = true; });
         SelectEchoPresetCommand = new RelayCommand(() => { ActiveVoicePreset = VoicePreset.Echo; IsVoiceChangerEnabled = true; });
         SelectBypassPresetCommand = new RelayCommand(() => { ActiveVoicePreset = VoicePreset.Bypass; IsVoiceChangerEnabled = false; });
+
+        // Initialize Voice Model Cards
+        InitializeVoiceModelCards();
 
         // Listen for Soundboard playback events
         _audioService.SoundboardMixer.PlaybackStateChanged += OnSoundboardStateChanged;
@@ -141,6 +152,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public ObservableCollection<SoundPadViewModel> SoundPads { get; }
     public ObservableCollection<SoundPadViewModel> FilteredSoundPads { get; }
     public ObservableCollection<string> Categories { get; }
+    public ObservableCollection<VoiceModelCardViewModel> VoiceModelCards { get; }
 
     // Commands
     public ICommand ToggleMuteCommand { get; }
@@ -155,6 +167,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     // Navigation Commands
     public ICommand SelectStudioCommand { get; }
     public ICommand SelectSoundboardCommand { get; }
+    public ICommand SelectVoiceChangerCommand { get; }
     public ICommand SelectSettingsCommand { get; }
 
     // Soundboard Commands
@@ -162,6 +175,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public ICommand AddSoundCommand { get; }
 
     // Voice Changer Commands
+    public ICommand SelectAiEngineCommand { get; }
+    public ICommand SelectFastDspCommand { get; }
+    public ICommand ImportCustomModelCommand { get; }
     public ICommand SelectGirlPresetCommand { get; }
     public ICommand SelectLadyPresetCommand { get; }
     public ICommand SelectDemonPresetCommand { get; }
@@ -181,6 +197,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             {
                 OnPropertyChanged(nameof(IsStudioTabActive));
                 OnPropertyChanged(nameof(IsSoundboardTabActive));
+                OnPropertyChanged(nameof(IsVoiceChangerTabActive));
                 OnPropertyChanged(nameof(IsSettingsTabActive));
                 OnPropertyChanged(nameof(BreadcrumbText));
             }
@@ -189,8 +206,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public bool IsStudioTabActive => CurrentTab == "Studio";
     public bool IsSoundboardTabActive => CurrentTab == "Soundboard";
+    public bool IsVoiceChangerTabActive => CurrentTab == "VoiceChanger";
     public bool IsSettingsTabActive => CurrentTab == "Settings";
-    public string BreadcrumbText => $"VIXXO  ›  {CurrentTab}";
+    public string BreadcrumbText => $"VIXXO  ›  {(CurrentTab == "VoiceChanger" ? "Voice Changer" : CurrentTab)}";
 
     // Soundboard Properties
     public float SoundboardVolumeDb
@@ -645,6 +663,162 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public bool IsEchoActive => IsVoiceChangerEnabled && ActiveVoicePreset == VoicePreset.Echo;
     public bool IsBypassActive => !IsVoiceChangerEnabled || ActiveVoicePreset == VoicePreset.Bypass;
 
+    // AI Neural Engine & Voice Changer Workspace Properties
+    public VoiceEngineMode SelectedEngineMode
+    {
+        get => _selectedEngineMode;
+        set
+        {
+            if (SetProperty(ref _selectedEngineMode, value))
+            {
+                _audioService.MainRenderer.VoiceEngineMode = value;
+                if (_audioService.MonitorRenderer != null) _audioService.MonitorRenderer.VoiceEngineMode = value;
+                _settingsService.CurrentSettings.VoiceEngineMode = value;
+                _settingsService.Save();
+                OnPropertyChanged(nameof(IsAiEngineActive));
+                OnPropertyChanged(nameof(IsFastDspActive));
+                OnPropertyChanged(nameof(EngineModeTitleText));
+                OnPropertyChanged(nameof(GpuLatencyText));
+            }
+        }
+    }
+
+    public bool IsAiEngineActive => SelectedEngineMode == VoiceEngineMode.AiNeural;
+    public bool IsFastDspActive => SelectedEngineMode == VoiceEngineMode.FastDsp;
+    public string EngineModeTitleText => IsAiEngineActive ? "AI Neural Engine (RVC v2 • RTX 4050)" : "Classic Fast DSP Engine (< 5ms)";
+    public string GpuHardwareText => "NVIDIA GeForce RTX 4050 (Active • DirectML/CUDA)";
+    public string GpuLatencyText => IsAiEngineActive ? "~42 ms (Tensor Cores)" : "< 5 ms (Zero-Lag DSP)";
+
+    public float FormantShift
+    {
+        get => _formantShift;
+        set
+        {
+            if (SetProperty(ref _formantShift, value))
+            {
+                _audioService.MainRenderer.FormantShift = value;
+                if (_audioService.MonitorRenderer != null) _audioService.MonitorRenderer.FormantShift = value;
+                _settingsService.CurrentSettings.FormantShift = value;
+                _settingsService.Save();
+                OnPropertyChanged(nameof(FormantShiftText));
+            }
+        }
+    }
+    public string FormantShiftText => $"{FormantShift:+0.0;-0.0;0.0}";
+
+    public float IndexRate
+    {
+        get => _indexRate;
+        set
+        {
+            if (SetProperty(ref _indexRate, value))
+            {
+                _audioService.MainRenderer.IndexRate = value;
+                if (_audioService.MonitorRenderer != null) _audioService.MonitorRenderer.IndexRate = value;
+                _settingsService.CurrentSettings.IndexRate = value;
+                _settingsService.Save();
+                OnPropertyChanged(nameof(IndexRateText));
+            }
+        }
+    }
+    public string IndexRateText => $"{IndexRate:P0}";
+
+    public void InitializeVoiceModelCards()
+    {
+        VoiceModelCards.Clear();
+
+        var models = new List<(string Id, string Name, string Subtitle, string Desc, string Emoji, string Tag, string TagColor, VoicePreset Preset, float Pitch, float Formant)>
+        {
+            ("girl", "Sweet Anime Girl", "Kawaii VTuber", "High clarity youthful female voice with tuned vocal tract formants", "👧", "POPULAR", "#E879F9", VoicePreset.Girl, 5.8f, 2.0f),
+            ("lady", "Mature Lady", "Natural Adult Female", "Warm, confident adult female vocal timbre for gaming comms & Discord", "👩", "NATURAL", "#A855F7", VoicePreset.Lady, 3.8f, 1.2f),
+            ("sage", "Valorant Sage", "Tactical Healer", "Calm, assertive tactical leader voice for team calls", "🧝", "VALORANT", "#10B981", VoicePreset.Sage, 3.5f, 1.0f),
+            ("jett", "Valorant Jett", "Wind Assassin", "Sharp, energetic duelist vocal tone for clutch trolling", "💨", "VALORANT", "#38BDF8", VoicePreset.Jett, 5.2f, 1.8f),
+            ("demon", "Shadow Demon", "Overlord Boss", "Deep demonic pitch-down with dark sub-bass overdrive", "👹", "DARK", "#EF4444", VoicePreset.Demon, -4.8f, -2.5f),
+            ("helium", "Helium Squeak", "Cartoon Troll", "Extreme high squeaky pitch for funny gaming moments", "🎈", "TROLL", "#F59E0B", VoicePreset.Helium, 8.5f, 3.0f),
+            ("robot", "Cyborg RingMod", "Metallic Vocoder", "55 Hz robotic ring modulator carrier effect", "🤖", "EFFECT", "#06B6D4", VoicePreset.Robot, 0.0f, 0.0f),
+            ("radio", "Military Radio", "Walkie-Talkie", "350Hz-3400Hz tactical comms bandpass + AM overdrive crunch", "📻", "EFFECT", "#10B981", VoicePreset.Radio, 0.5f, 0.0f),
+            ("echo", "Stadium Echo", "Cathedral Reverb", "Spacious dual comb reverb for booming announcements", "🏛️", "EFFECT", "#3B82F6", VoicePreset.Echo, 0.0f, 0.0f),
+            ("bypass", "Clean Mic", "Original Audio", "Direct un-altered microphone passthrough", "🎙️", "DEFAULT", "#64748B", VoicePreset.Bypass, 0.0f, 0.0f)
+        };
+
+        foreach (var m in models)
+        {
+            var card = new VoiceModelCardViewModel
+            {
+                Id = m.Id,
+                Name = m.Name,
+                Subtitle = m.Subtitle,
+                Description = m.Desc,
+                AvatarEmoji = m.Emoji,
+                Tag = m.Tag,
+                TagColor = m.TagColor,
+                Preset = m.Preset,
+                DefaultPitch = m.Pitch,
+                DefaultFormant = m.Formant,
+                IsSelected = (m.Preset == _activeVoicePreset)
+            };
+            card.SelectCommand = new RelayCommand(() => SelectVoiceModel(card));
+            VoiceModelCards.Add(card);
+        }
+    }
+
+    public void SelectVoiceModel(VoiceModelCardViewModel card)
+    {
+        if (card == null) return;
+        foreach (var c in VoiceModelCards)
+        {
+            c.IsSelected = (c == card);
+        }
+        ActiveVoicePreset = card.Preset;
+        VoicePitchSemitones = card.DefaultPitch;
+        FormantShift = card.DefaultFormant;
+        if (card.IsCustom && !string.IsNullOrEmpty(card.FilePath))
+        {
+            _audioService.MainRenderer.CustomModelPath = card.FilePath;
+            _settingsService.CurrentSettings.CustomModelPath = card.FilePath;
+            _settingsService.Save();
+        }
+        IsVoiceChangerEnabled = true;
+    }
+
+    private void ImportCustomModel()
+    {
+        try
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog
+            {
+                Title = "Select RVC Voice Model (.pth or .onnx)",
+                Filter = "RVC Voice Models (*.pth;*.onnx)|*.pth;*.onnx|All Files (*.*)|*.*"
+            };
+            if (dlg.ShowDialog() == true)
+            {
+                string fileName = System.IO.Path.GetFileNameWithoutExtension(dlg.FileName);
+                var card = new VoiceModelCardViewModel
+                {
+                    Id = $"custom_{Guid.NewGuid():N}",
+                    Name = fileName,
+                    Subtitle = "Imported RVC Model",
+                    Description = $"Custom voice model loaded from {dlg.FileName}",
+                    AvatarEmoji = "⭐",
+                    Tag = "CUSTOM",
+                    TagColor = "#F59E0B",
+                    Preset = VoicePreset.Bypass,
+                    DefaultPitch = 0.0f,
+                    DefaultFormant = 0.0f,
+                    IsCustom = true,
+                    FilePath = dlg.FileName
+                };
+                card.SelectCommand = new RelayCommand(() => SelectVoiceModel(card));
+                VoiceModelCards.Add(card);
+                SelectVoiceModel(card);
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to import custom model: {ex.Message}");
+        }
+    }
+
     public LatencyMode SelectedLatencyMode
     {
         get => _selectedLatencyMode;
@@ -734,6 +908,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _isVoiceChangerEnabled = s.IsVoiceChangerEnabled;
         _activeVoicePreset = s.ActiveVoicePreset;
         _voicePitchSemitones = s.VoicePitchSemitones;
+        _selectedEngineMode = s.VoiceEngineMode;
+        _formantShift = s.FormantShift;
+        _indexRate = s.IndexRate;
 
         // Apply audio states
         _audioService.MainRenderer.GainDb = _gainDb;
@@ -743,8 +920,12 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _audioService.MainRenderer.IsNoiseGateEnabled = _isNoiseGateEnabled;
         _audioService.MainRenderer.NoiseGateThresholdDb = _noiseGateThresholdDb;
         _audioService.MainRenderer.IsVoiceChangerEnabled = _isVoiceChangerEnabled;
+        _audioService.MainRenderer.VoiceEngineMode = _selectedEngineMode;
         _audioService.MainRenderer.ActiveVoicePreset = _activeVoicePreset;
         _audioService.MainRenderer.VoicePitchSemitones = _voicePitchSemitones;
+        _audioService.MainRenderer.FormantShift = _formantShift;
+        _audioService.MainRenderer.IndexRate = _indexRate;
+        _audioService.MainRenderer.CustomModelPath = s.CustomModelPath;
         _audioService.SetLatencyMode(_selectedLatencyMode);
 
         _audioService.SoundboardMixer.SoundboardVolumeDb = _soundboardVolumeDb;

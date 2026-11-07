@@ -170,8 +170,12 @@ public sealed class AudioService : IAsyncDisposable
                 IsNoiseGateEnabled = _mainRenderer.IsNoiseGateEnabled,
                 NoiseGateThresholdDb = _mainRenderer.NoiseGateThresholdDb,
                 IsVoiceChangerEnabled = _mainRenderer.IsVoiceChangerEnabled,
+                VoiceEngineMode = _mainRenderer.VoiceEngineMode,
                 ActiveVoicePreset = _mainRenderer.ActiveVoicePreset,
-                VoicePitchSemitones = _mainRenderer.VoicePitchSemitones
+                VoicePitchSemitones = _mainRenderer.VoicePitchSemitones,
+                FormantShift = _mainRenderer.FormantShift,
+                IndexRate = _mainRenderer.IndexRate,
+                CustomModelPath = _mainRenderer.CustomModelPath
             };
 
             _monitorRenderer.Start(device, latencyMs);

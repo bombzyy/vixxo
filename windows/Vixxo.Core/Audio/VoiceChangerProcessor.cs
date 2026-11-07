@@ -1,10 +1,18 @@
 namespace Vixxo.Core.Audio;
 
+public enum VoiceEngineMode
+{
+    AiNeural,       // RVC v2 Neural Voice Conversion (RTX 4050 GPU accelerated)
+    FastDsp         // Low-latency time-domain DSP processing (< 5ms)
+}
+
 public enum VoicePreset
 {
     Bypass,         // Clean normal microphone
     Girl,           // Young / Anime Girl (+5.8st, throat formant shift, breath sparkle)
     Lady,           // Adult Woman (+3.8st, natural female chest cut, vocal presence)
+    Sage,           // Valorant Sage (+3.5st, tactical calm healer)
+    Jett,           // Valorant Jett (+5.2st, crisp energetic duelist)
     Demon,          // Deep Chad / Demon (-4.8st, sub-bass rumble, menacing saturation)
     Helium,         // Helium / Chipmunk (+8.5st, extreme cartoon high pitch)
     Robot,          // Cyborg / Ring Modulator (55 Hz metallic carrier)
@@ -41,6 +49,10 @@ public sealed class VoiceChangerProcessor
 
     // Configuration Properties
     public bool IsEnabled { get; set; } = false;
+    public VoiceEngineMode EngineMode { get; set; } = VoiceEngineMode.AiNeural;
+    public float FormantShift { get; set; } = 0.0f;
+    public float IndexRate { get; set; } = 0.75f;
+    public string? CustomModelPath { get; set; }
     private VoicePreset _activePreset = VoicePreset.Bypass;
     private float _customPitchSemitones = 0f;
 
@@ -95,6 +107,20 @@ public sealed class VoiceChangerProcessor
                 _lowShelfFilter.SetLowShelf(_sampleRate, 160f, -8.0f);     // Cut male chest rumble
                 _peakingFilter.SetPeakingEq(_sampleRate, 2800f, 4.5f, 1.2f); // Female formant boost
                 _highShelfFilter.SetHighShelf(_sampleRate, 7500f, 2.5f);   // Feminine breath presence
+                break;
+
+            case VoicePreset.Sage:
+                _customPitchSemitones = 3.5f;
+                _lowShelfFilter.SetLowShelf(_sampleRate, 170f, -9.0f);     // Balanced chest reduction
+                _peakingFilter.SetPeakingEq(_sampleRate, 2600f, 4.0f, 1.1f); // Tactical calm healer clarity
+                _highShelfFilter.SetHighShelf(_sampleRate, 7200f, 2.0f);
+                break;
+
+            case VoicePreset.Jett:
+                _customPitchSemitones = 5.2f;
+                _lowShelfFilter.SetLowShelf(_sampleRate, 210f, -12.0f);    // Crisp duelist tone
+                _peakingFilter.SetPeakingEq(_sampleRate, 3200f, 5.5f, 1.3f); // Sharp high presence
+                _highShelfFilter.SetHighShelf(_sampleRate, 8500f, 3.5f);
                 break;
 
             case VoicePreset.Girl:

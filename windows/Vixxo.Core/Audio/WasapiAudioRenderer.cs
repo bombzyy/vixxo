@@ -23,8 +23,12 @@ public sealed class WasapiAudioRenderer : IDisposable
     public SoundboardMixer? SoundboardMixer { get; set; }
 
     private bool _isVoiceChangerEnabled = false;
+    private VoiceEngineMode _voiceEngineMode = VoiceEngineMode.AiNeural;
     private VoicePreset _voicePreset = VoicePreset.Bypass;
     private float _voicePitchSemitones = 0f;
+    private float _formantShift = 0f;
+    private float _indexRate = 0.75f;
+    private string? _customModelPath = null;
 
     public bool IsVoiceChangerEnabled
     {
@@ -33,6 +37,16 @@ public sealed class WasapiAudioRenderer : IDisposable
         {
             _isVoiceChangerEnabled = value;
             if (_waveProvider != null) _waveProvider.VoiceChanger.IsEnabled = value;
+        }
+    }
+
+    public VoiceEngineMode VoiceEngineMode
+    {
+        get => _voiceEngineMode;
+        set
+        {
+            _voiceEngineMode = value;
+            if (_waveProvider != null) _waveProvider.VoiceChanger.EngineMode = value;
         }
     }
 
@@ -53,6 +67,36 @@ public sealed class WasapiAudioRenderer : IDisposable
         {
             _voicePitchSemitones = value;
             if (_waveProvider != null) _waveProvider.VoiceChanger.PitchSemitones = value;
+        }
+    }
+
+    public float FormantShift
+    {
+        get => _formantShift;
+        set
+        {
+            _formantShift = value;
+            if (_waveProvider != null) _waveProvider.VoiceChanger.FormantShift = value;
+        }
+    }
+
+    public float IndexRate
+    {
+        get => _indexRate;
+        set
+        {
+            _indexRate = value;
+            if (_waveProvider != null) _waveProvider.VoiceChanger.IndexRate = value;
+        }
+    }
+
+    public string? CustomModelPath
+    {
+        get => _customModelPath;
+        set
+        {
+            _customModelPath = value;
+            if (_waveProvider != null) _waveProvider.VoiceChanger.CustomModelPath = value;
         }
     }
 
@@ -162,8 +206,12 @@ public sealed class WasapiAudioRenderer : IDisposable
             _waveProvider.SoundboardMixer = SoundboardMixer;
             _waveProvider.IsMonitorOutput = IsMonitorOutput;
             _waveProvider.VoiceChanger.IsEnabled = _isVoiceChangerEnabled;
+            _waveProvider.VoiceChanger.EngineMode = _voiceEngineMode;
             _waveProvider.VoiceChanger.ActivePreset = _voicePreset;
             _waveProvider.VoiceChanger.PitchSemitones = _voicePitchSemitones;
+            _waveProvider.VoiceChanger.FormantShift = _formantShift;
+            _waveProvider.VoiceChanger.IndexRate = _indexRate;
+            _waveProvider.VoiceChanger.CustomModelPath = _customModelPath;
 
             try
             {

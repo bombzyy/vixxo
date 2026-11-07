@@ -21,8 +21,12 @@ public sealed class AppSettings
     public bool SendClipsToVirtualMic { get; set; } = true;
     public bool MonitorClipsInHeadphones { get; set; } = false;
     public bool IsVoiceChangerEnabled { get; set; } = false;
+    public VoiceEngineMode VoiceEngineMode { get; set; } = VoiceEngineMode.AiNeural;
     public VoicePreset ActiveVoicePreset { get; set; } = VoicePreset.Bypass;
     public float VoicePitchSemitones { get; set; } = 0.0f;
+    public float FormantShift { get; set; } = 0.0f;
+    public float IndexRate { get; set; } = 0.75f;
+    public string? CustomModelPath { get; set; }
     public bool MinimizeToTray { get; set; } = true;
     public bool CloseToTray { get; set; } = true;
 }
