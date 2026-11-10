@@ -31,10 +31,16 @@ android/.idea/
 
 # Binaries & Generated Artifacts
 artifacts/publish/
+windows/publish/
 artifacts/*.exe
 artifacts/*.apk
 artifacts/*.txt
 artifacts/*.log
+
+# Python & AI Engine
+__pycache__/
+*.pyc
+.venv/
 
 # Logs & Temporary files
 *.log

@@ -512,10 +512,33 @@
                                                         </Grid.ColumnDefinitions>
                                                         <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
                                                         
-                                                        <!-- Key Shortcut Badge -->
-                                                        <Border Grid.Column="1" Background="#182338" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="5,1" Margin="4,0" VerticalAlignment="Center">
-                                                            <TextBlock Text="{Binding Shortcut}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" FontFamily="Consolas" />
-                                                        </Border>
+                                                        <!-- Interactive Key Shortcut Badge -->
+                                                        <Button Grid.Column="1" Command="{Binding ChangeShortcutCommand}"
+                                                                ToolTip="Click to assign or change global hotkey"
+                                                                Margin="4,0" VerticalAlignment="Center" Cursor="Hand">
+                                                            <Button.Template>
+                                                                <ControlTemplate TargetType="Button">
+                                                                    <Border Background="{TemplateBinding Background}" 
+                                                                            BorderBrush="{TemplateBinding BorderBrush}" 
+                                                                            BorderThickness="1" CornerRadius="4" Padding="6,2">
+                                                                        <TextBlock Text="{Binding ShortcutBadgeText}" FontSize="10" FontWeight="Bold" 
+                                                                                   Foreground="{StaticResource AccentBrush}" FontFamily="Consolas" />
+                                                                    </Border>
+                                                                </ControlTemplate>
+                                                            </Button.Template>
+                                                            <Button.Style>
+                                                                <Style TargetType="Button">
+                                                                    <Setter Property="Background" Value="#182338" />
+                                                                    <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+                                                                    <Style.Triggers>
+                                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                                            <Setter Property="Background" Value="#223652" />
+                                                                            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                                                        </Trigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Button.Style>
+                                                        </Button>
 
                                                         <!-- Delete Button -->
                                                         <Button Grid.Column="2" Content="✕" Command="{Binding DeleteCommand}" Style="{StaticResource OutlinedButtonStyle}" Padding="4,1" FontSize="10" Foreground="{StaticResource TextMutedBrush}" ToolTip="Delete this sound" />
@@ -957,6 +980,30 @@
                                 <TextBlock Text="{Binding TestStatusMessage}" FontSize="11" Foreground="{StaticResource WarningBrush}" />
                             </StackPanel>
                         </Border>
+
+                        <!-- Software & Updates -->
+                        <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,16">
+                            <StackPanel Orientation="Vertical">
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Orientation="Vertical">
+                                        <TextBlock Text="Software &amp; Updates" FontWeight="Bold" FontSize="13" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,2" />
+                                        <TextBlock Text="Check GitHub for the latest Vixxo releases, AI voice updates, and bug fixes." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" />
+                                    </StackPanel>
+                                    <Border Grid.Column="1" Background="{StaticResource SurfaceSubtleBrush}" BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="1" CornerRadius="4" Padding="8,4" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding AppVersion}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" FontFamily="Consolas" />
+                                    </Border>
+                                </Grid>
+
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,6,0,0">
+                                    <Button Content="🔄 Check for Updates" Command="{Binding CheckForUpdatesCommand}" Style="{StaticResource OutlinedButtonStyle}" Padding="14,6" Margin="0,0,14,0" />
+                                    <TextBlock Text="{Binding UpdateStatusText}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </Grid>
@@ -970,7 +1017,7 @@
                         <Ellipse Width="6" Height="6" Fill="{StaticResource SuccessBrush}" VerticalAlignment="Center" Margin="0,0,6,0" />
                         <TextBlock Text="Connected to virtual audio cable (48 kHz / 16-bit Mono PCM)" FontSize="11" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" />
                     </StackPanel>
-                    <TextBlock Text="Shortcuts 1–8 • Space to stop" FontSize="11" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="Consolas" />
+                    <TextBlock Text="Global Hotkeys Active • Click badge to rebind • NumPad0 to stop" FontSize="11" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="Consolas" />
                 </Grid>
             </Border>
 

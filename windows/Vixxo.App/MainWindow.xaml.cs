@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Interop;
 using Vixxo.App.Services;
 using Vixxo.App.ViewModels;
 
@@ -25,6 +26,13 @@ public partial class MainWindow : Window
 
         _trayIconManager = new TrayIconManager(this, _viewModel, _settingsService);
         Microsoft.Win32.SystemEvents.PowerModeChanged += OnPowerModeChanged;
+    }
+
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        var handle = new WindowInteropHelper(this).Handle;
+        _viewModel.InitializeHotkeys(handle);
     }
 
     protected override void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)

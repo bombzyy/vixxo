@@ -29,4 +29,5 @@ public sealed class AppSettings
     public string? CustomModelPath { get; set; }
     public bool MinimizeToTray { get; set; } = true;
     public bool CloseToTray { get; set; } = true;
+    public string StopHotkey { get; set; } = "NumPad0";
 }

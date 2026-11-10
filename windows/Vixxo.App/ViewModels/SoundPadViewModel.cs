@@ -27,8 +27,18 @@ public sealed class SoundPadViewModel : ObservableObject
     public string Shortcut
     {
         get => _shortcut;
-        set => SetProperty(ref _shortcut, value);
+        set
+        {
+            if (SetProperty(ref _shortcut, value))
+            {
+                OnPropertyChanged(nameof(HasShortcut));
+                OnPropertyChanged(nameof(ShortcutBadgeText));
+            }
+        }
     }
+
+    public bool HasShortcut => !string.IsNullOrWhiteSpace(_shortcut);
+    public string ShortcutBadgeText => string.IsNullOrWhiteSpace(_shortcut) ? "+ Bind" : _shortcut;
 
     public string Duration
     {
@@ -64,4 +74,5 @@ public sealed class SoundPadViewModel : ObservableObject
 
     public ICommand? PlayCommand { get; set; }
     public ICommand? DeleteCommand { get; set; }
+    public ICommand? ChangeShortcutCommand { get; set; }
 }

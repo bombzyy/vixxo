@@ -70,6 +70,23 @@ public sealed record StatsPayload(
     [property: JsonPropertyName("underrunCount")] long UnderrunCount,
     [property: JsonPropertyName("dropCount")] long DropCount);
 
+public sealed record SoundboardClipDescriptor(
+    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("category")] string Category,
+    [property: JsonPropertyName("durationText")] string DurationText,
+    [property: JsonPropertyName("shortcutKey")] string ShortcutKey,
+    [property: JsonPropertyName("isPlaying")] bool IsPlaying);
+
+public sealed record SoundboardSyncPayload(
+    [property: JsonPropertyName("isPlaying")] bool IsPlaying,
+    [property: JsonPropertyName("currentPlayingClipName")] string? CurrentPlayingClipName,
+    [property: JsonPropertyName("clips")] List<SoundboardClipDescriptor> Clips);
+
+public sealed record SoundboardActionPayload(
+    [property: JsonPropertyName("action")] string Action, // "play" | "stop"
+    [property: JsonPropertyName("clipId")] string? ClipId);
+
 public static class ProtocolJson
 {
     public static readonly JsonSerializerOptions Options = new()

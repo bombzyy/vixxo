@@ -1,8 +1,10 @@
+using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using NAudio.CoreAudioApi;
 using Vixxo.Core.Audio;
+using Vixxo.Core.Audio.Ipc;
 using Vixxo.Core.Discovery;
 using Vixxo.Core.Security;
 using Vixxo.Core.Server;
@@ -44,6 +46,9 @@ public sealed class AudioService : IAsyncDisposable
     public WasapiAudioRenderer MainRenderer => _mainRenderer;
     public WasapiAudioRenderer? MonitorRenderer => _monitorRenderer;
     public VixxoServer? Server => _server;
+    public AiVoiceProcessor? AiVoiceProcessor => _aiVoiceProcessor;
+
+    private AiVoiceProcessor? _aiVoiceProcessor;
 
     public bool IsMonitoringActive => _monitorRenderer?.IsActive ?? false;
 
@@ -269,11 +274,125 @@ public sealed class AudioService : IAsyncDisposable
         return list.Distinct().ToList();
     }
 
+    public static (string? pythonExe, string? serverScript, string? defaultModel, string? defaultIndex) FindRvcPaths()
+    {
+        string[] searchRoots = new[]
+        {
+            AppContext.BaseDirectory,
+            Directory.GetCurrentDirectory(),
+            @"C:\PERSONAL FILES\projects\mic to pc"
+        };
+
+        string? foundPy = null;
+        string? foundScript = null;
+        string? foundModel = null;
+        string? foundIndex = null;
+
+        // Find Python executable
+        foreach (var root in searchRoots)
+        {
+            if (string.IsNullOrEmpty(root)) continue;
+            string? current = root;
+            for (int i = 0; i < 8; i++)
+            {
+                if (current == null) break;
+                string py = Path.Combine(current, "engine", "rvc_worker", ".venv", "Scripts", "python.exe");
+                if (File.Exists(py))
+                {
+                    foundPy = py;
+                    break;
+                }
+                current = Directory.GetParent(current)?.FullName;
+            }
+            if (foundPy != null) break;
+        }
+
+        // Find server script and default models
+        foreach (var root in searchRoots)
+        {
+            if (string.IsNullOrEmpty(root)) continue;
+            string? current = root;
+            for (int i = 0; i < 8; i++)
+            {
+                if (current == null) break;
+                string script = Path.Combine(current, "engine", "rvc_worker", "ipc_server.py");
+                if (File.Exists(script))
+                {
+                    foundScript = script;
+                    string defModel = Path.Combine(current, "engine", "rvc_worker", "models", "characters", "default", "default.pth");
+                    string defIndex = Path.Combine(current, "engine", "rvc_worker", "models", "characters", "default", "default.index");
+                    if (File.Exists(defModel)) foundModel = defModel;
+                    if (File.Exists(defIndex)) foundIndex = defIndex;
+                    break;
+                }
+                current = Directory.GetParent(current)?.FullName;
+            }
+            if (foundScript != null) break;
+        }
+
+        return (foundPy, foundScript, foundModel, foundIndex);
+    }
+
+    public async Task<bool> InitializeAiVoiceProcessorAsync()
+    {
+        if (_aiVoiceProcessor != null) return true;
+
+        var (pythonExe, serverScript, defaultModel, defaultIndex) = FindRvcPaths();
+        if (pythonExe == null || serverScript == null)
+        {
+            System.Diagnostics.Debug.WriteLine("[AudioService] RVC Worker Python environment not found.");
+            return false;
+        }
+
+        try
+        {
+            var processor = new AiVoiceProcessor(_mainRenderer.VoiceChanger, 48000, "vixxo_voice");
+            bool started = await processor.ControlClient.StartAsync(
+                pythonExe,
+                serverScript,
+                arguments: $"--pipe-prefix vixxo_voice --chunk-ms 80 --model \"{defaultModel}\" --index \"{defaultIndex}\"",
+                connectTimeoutMs: 15000
+            ).ConfigureAwait(false);
+
+            if (!started)
+            {
+                processor.Dispose();
+                return false;
+            }
+
+            if (!processor.Start(chunkMs: 80, targetAiSampleRate: 40000))
+            {
+                processor.Dispose();
+                return false;
+            }
+
+            _aiVoiceProcessor = processor;
+            _mainRenderer.AiVoiceProcessor = processor;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[AudioService] Failed to initialize AI Voice Processor: {ex.Message}");
+            return false;
+        }
+    }
+
+    public void ShutdownAiVoiceProcessor()
+    {
+        if (_aiVoiceProcessor != null)
+        {
+            _mainRenderer.AiVoiceProcessor = null;
+            _aiVoiceProcessor.Dispose();
+            _aiVoiceProcessor = null;
+        }
+    }
+
     public async ValueTask DisposeAsync()
     {
         if (!_isDisposed)
         {
             _isDisposed = true;
+            ShutdownAiVoiceProcessor();
             AdbManager.Dispose();
             DisableMonitoring();
             StopMainRenderer();

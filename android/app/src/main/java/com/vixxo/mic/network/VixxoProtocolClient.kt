@@ -46,6 +46,8 @@ class VixxoProtocolClient(
     var lastRttMs: Float = 0f
         private set
 
+    var onSoundboardSyncReceived: ((SoundboardSyncData) -> Unit)? = null
+
     suspend fun connect(timeoutMs: Int = 5000): Result<String> = withContext(Dispatchers.IO) {
         try {
             val sock = Socket()
@@ -144,7 +146,7 @@ class VixxoProtocolClient(
             val serverName = welcomeObj.optString("serverName", "Windows-PC")
 
             // Store new device credential if issued
-            val newCred = welcomeObj.optString("deviceCredential", null)
+            val newCred = if (welcomeObj.has("deviceCredential") && !welcomeObj.isNull("deviceCredential")) welcomeObj.getString("deviceCredential") else null
             if (!newCred.isNullOrBlank()) {
                 onCredentialReceived?.invoke(newCred)
             }
@@ -219,6 +221,111 @@ class VixxoProtocolClient(
                 out.flush()
             } catch (e: Exception) {
                 isConnected = false
+            }
+        }
+    }
+
+    fun sendSoundboardAction(action: String, clipId: String? = null) {
+        if (!isConnected) return
+        val json = JSONObject().apply {
+            put("action", action)
+            if (!clipId.isNullOrBlank()) {
+                put("clipId", clipId)
+            }
+        }
+        try {
+            writeJson(MessageType.SOUNDBOARD_ACTION, json.toString())
+        } catch (_: Exception) {
+            isConnected = false
+        }
+    }
+
+    suspend fun runFrameReceiverLoop() = withContext(Dispatchers.IO) {
+        val inStream = inputStream ?: return@withContext
+        val localHeaderBuffer = ByteArray(FrameHeader.HEADER_SIZE)
+
+        while (isConnected) {
+            try {
+                var headerBytesRead = 0
+                while (headerBytesRead < FrameHeader.HEADER_SIZE) {
+                    val count = inStream.read(localHeaderBuffer, headerBytesRead, FrameHeader.HEADER_SIZE - headerBytesRead)
+                    if (count < 0) {
+                        isConnected = false
+                        return@withContext
+                    }
+                    headerBytesRead += count
+                }
+
+                val parseResult = FrameHeader.parse(localHeaderBuffer, 0)
+                if (parseResult.isFailure) {
+                    continue
+                }
+                val frameHeader = parseResult.getOrThrow()
+
+                val payload = ByteArray(frameHeader.payloadLength)
+                var payloadBytesRead = 0
+                while (payloadBytesRead < frameHeader.payloadLength) {
+                    val count = inStream.read(payload, payloadBytesRead, frameHeader.payloadLength - payloadBytesRead)
+                    if (count < 0) {
+                        isConnected = false
+                        return@withContext
+                    }
+                    payloadBytesRead += count
+                }
+
+                when (frameHeader.type) {
+                    MessageType.PONG -> {
+                        if (payload.size >= 8) {
+                            val sentUs = ByteBuffer.wrap(payload).order(ByteOrder.LITTLE_ENDIAN).long
+                            val nowUs = SystemClock.elapsedRealtimeNanos() / 1000L
+                            val rtt = ((nowUs - sentUs) / 1000f).coerceAtLeast(0f)
+                            lastRttMs = rtt
+                        }
+                    }
+                    MessageType.SOUNDBOARD_SYNC -> {
+                        try {
+                            val jsonStr = String(payload, Charsets.UTF_8)
+                            val jsonObj = JSONObject(jsonStr)
+                            val isPlaying = jsonObj.optBoolean("isPlaying", false)
+                            val currentPlayingClipName = if (jsonObj.has("currentPlayingClipName") && !jsonObj.isNull("currentPlayingClipName")) {
+                                jsonObj.getString("currentPlayingClipName")
+                            } else null
+
+                            val clipsArray = jsonObj.optJSONArray("clips") ?: JSONArray()
+                            val clipsList = ArrayList<SoundboardClip>(clipsArray.length())
+                            for (i in 0 until clipsArray.length()) {
+                                val cObj = clipsArray.getJSONObject(i)
+                                clipsList.add(
+                                    SoundboardClip(
+                                        id = cObj.optString("id", ""),
+                                        name = cObj.optString("name", ""),
+                                        category = cObj.optString("category", "General"),
+                                        durationText = cObj.optString("durationText", "0:00"),
+                                        shortcutKey = cObj.optString("shortcutKey", ""),
+                                        isPlaying = cObj.optBoolean("isPlaying", false)
+                                    )
+                                )
+                            }
+
+                            val syncData = SoundboardSyncData(
+                                isPlaying = isPlaying,
+                                currentPlayingClipName = currentPlayingClipName,
+                                clips = clipsList
+                            )
+                            onSoundboardSyncReceived?.invoke(syncData)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                    else -> {
+                        // Other frames
+                    }
+                }
+            } catch (_: Exception) {
+                if (isConnected) {
+                    isConnected = false
+                }
+                break
             }
         }
     }

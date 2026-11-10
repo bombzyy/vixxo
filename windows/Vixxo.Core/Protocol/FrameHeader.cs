@@ -14,7 +14,9 @@ public enum MessageType : byte
     Stats = 0x0A,
     Control = 0x0B,
     Error = 0x0C,
-    Bye = 0x0D
+    Bye = 0x0D,
+    SoundboardSync = 0x0E,
+    SoundboardAction = 0x0F
 }
 
 public readonly record struct FrameHeader(MessageType Type, uint PayloadLength)

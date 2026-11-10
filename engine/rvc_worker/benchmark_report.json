@@ -1,0 +1,109 @@
+{
+  "hardware": {
+    "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "vram_total_mb": 6140.5,
+    "cuda_available": true,
+    "pytorch_version": "2.5.1+cu121"
+  },
+  "model_loading": {
+    "total_load_ms": 2934.844100003829,
+    "sample_rate": 40000,
+    "version": "v2"
+  },
+  "streaming_benchmarks": [
+    {
+      "chunk_ms": 40,
+      "context_ms": 350,
+      "crossfade_ms": 10,
+      "avg_f0_ms": 22.37852096790917,
+      "avg_feature_ms": 9.382183870970508,
+      "avg_generator_ms": 40.974555645187785,
+      "avg_total_ms": 73.48689193572828,
+      "p95_total_ms": 100.1546550018247,
+      "real_time_factor": 1.837172298393207,
+      "headroom_ms": -33.48689193572828,
+      "peak_vram_mb": 626.0810546875,
+      "realtime_capable": false,
+      "discontinuity": {
+        "max_boundary_jump": 0.3815460205078125,
+        "mean_boundary_jump": 0.07172165811061859,
+        "interior_mean_jump": 0.004646538756787777
+      },
+      "output_wav": "C:\\PERSONAL FILES\\projects\\mic to pc\\engine\\rvc_worker\\test_audio\\benchmark_40ms.wav"
+    },
+    {
+      "chunk_ms": 60,
+      "context_ms": 350,
+      "crossfade_ms": 10,
+      "avg_f0_ms": 21.90206265078748,
+      "avg_feature_ms": 9.534802409492052,
+      "avg_generator_ms": 42.02669036091819,
+      "avg_total_ms": 74.18601084383084,
+      "p95_total_ms": 99.35573000257132,
+      "real_time_factor": 1.2364335140638474,
+      "headroom_ms": -14.186010843830843,
+      "peak_vram_mb": 626.0849609375,
+      "realtime_capable": false,
+      "discontinuity": {
+        "max_boundary_jump": 0.530517578125,
+        "mean_boundary_jump": 0.07778429985046387,
+        "interior_mean_jump": 0.005044523626565933
+      },
+      "output_wav": "C:\\PERSONAL FILES\\projects\\mic to pc\\engine\\rvc_worker\\test_audio\\benchmark_60ms.wav"
+    },
+    {
+      "chunk_ms": 80,
+      "context_ms": 350,
+      "crossfade_ms": 10,
+      "avg_f0_ms": 22.267877419395635,
+      "avg_feature_ms": 9.863146774155359,
+      "avg_generator_ms": 41.59184838675672,
+      "avg_total_ms": 74.46157096802058,
+      "p95_total_ms": 106.52083500463046,
+      "real_time_factor": 0.9307696371002573,
+      "headroom_ms": 5.538429031979419,
+      "peak_vram_mb": 626.0888671875,
+      "realtime_capable": true,
+      "discontinuity": {
+        "max_boundary_jump": 0.49591064453125,
+        "mean_boundary_jump": 0.09239424765110016,
+        "interior_mean_jump": 0.005334959365427494
+      },
+      "output_wav": "C:\\PERSONAL FILES\\projects\\mic to pc\\engine\\rvc_worker\\test_audio\\benchmark_80ms.wav"
+    },
+    {
+      "chunk_ms": 120,
+      "context_ms": 350,
+      "crossfade_ms": 10,
+      "avg_f0_ms": 22.271748780728625,
+      "avg_feature_ms": 9.592653658928167,
+      "avg_generator_ms": 40.81224146328878,
+      "avg_total_ms": 73.37031951305462,
+      "p95_total_ms": 93.82779999577906,
+      "real_time_factor": 0.6114193292754552,
+      "headroom_ms": 46.629680486945375,
+      "peak_vram_mb": 626.099609375,
+      "realtime_capable": true,
+      "discontinuity": {
+        "max_boundary_jump": 0.297607421875,
+        "mean_boundary_jump": 0.06641373038291931,
+        "interior_mean_jump": 0.005622608121484518
+      },
+      "output_wav": "C:\\PERSONAL FILES\\projects\\mic to pc\\engine\\rvc_worker\\test_audio\\benchmark_120ms.wav"
+    }
+  ],
+  "female_voice_test": {
+    "model": "MikuAI_e210_s6300 (RVC v2)",
+    "pitch_shift": 12,
+    "metrics": {
+      "f0_ms": 55.08659999759402,
+      "feature_ms": 14.111500000581145,
+      "generator_ms": 126.32789999770466,
+      "total_ms": 196.77429999865126,
+      "duration_s": 5.0,
+      "rtf": 0.03935485999973025,
+      "peak_vram_mb": 1347.505859375
+    },
+    "output_wav": "C:\\PERSONAL FILES\\projects\\mic to pc\\engine\\rvc_worker\\test_audio\\output_miku_full.wav"
+  }
+}

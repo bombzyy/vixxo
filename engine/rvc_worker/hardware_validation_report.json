@@ -1,0 +1,32 @@
+{
+  "timestamp": 1794074301.9876785,
+  "device": "cuda",
+  "gpu_name": "NVIDIA GeForce RTX 4050 Laptop GPU",
+  "quality": {
+    "max_amplitude": 0.7783203125,
+    "rms_level": 0.10072825849056244,
+    "clipping_samples": 0,
+    "avg_seam_delta": 0.06841210275888443,
+    "max_seam_delta": 0.33880615234375
+  },
+  "stability": {
+    "total_chunks": 1000,
+    "total_audio_sec": 80.0,
+    "wall_clock_sec": 89.59434260000126,
+    "real_time_factor": 1.1199292825000158,
+    "avg_ms": 89.59136000016588,
+    "p50_ms": 89.06050000223331,
+    "p95_ms": 118.45170999840775,
+    "p99_ms": 132.6796300055139,
+    "max_ms": 285.38059999846155,
+    "underrun_count": 649,
+    "latency_drift_ms": -6.300242999350303,
+    "vram_mb": 605.20556640625,
+    "vram_peak_mb": 626.0888671875
+  },
+  "gaming_load": {
+    "avg_ms": 83.01822800000082,
+    "p95_ms": 106.73367500094173,
+    "underruns": 58
+  }
+}

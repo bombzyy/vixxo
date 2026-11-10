@@ -16,7 +16,9 @@ enum class MessageType(val value: Byte) {
     STATS(0x0A),
     CONTROL(0x0B),
     ERROR(0x0C),
-    BYE(0x0D);
+    BYE(0x0D),
+    SOUNDBOARD_SYNC(0x0E),
+    SOUNDBOARD_ACTION(0x0F);
 
     companion object {
         fun fromByte(b: Byte): MessageType? = entries.find { it.value == b }

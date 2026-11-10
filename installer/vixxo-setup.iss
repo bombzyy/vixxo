@@ -1,6 +1,6 @@
 ; Vixxo Windows Setup Script (Inno Setup 6)
 #define MyAppName "Vixxo"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "2.0.0"
 #define MyAppPublisher "Vixxo Project"
 #define MyAppURL "https://github.com/vixxo/vixxo"
 #define MyAppExeName "Vixxo.exe"
@@ -38,6 +38,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "..\artifacts\publish\windows\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\engine\rvc_worker\*"; DestDir: "{app}\engine\rvc_worker"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: ".venv\*,__pycache__\*,test_audio\*,*.pyc"
 Source: "driver\*"; DestDir: "{tmp}\vbcable"; Flags: deleteafterinstall
 
 [Icons]

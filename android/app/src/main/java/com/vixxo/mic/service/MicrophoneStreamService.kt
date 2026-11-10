@@ -16,6 +16,7 @@ import androidx.core.app.NotificationCompat
 import com.vixxo.mic.MainActivity
 import com.vixxo.mic.R
 import com.vixxo.mic.audio.AudioCaptureEngine
+import com.vixxo.mic.network.SoundboardClip
 import com.vixxo.mic.network.VixxoProtocolClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -70,6 +71,15 @@ class MicrophoneStreamService : Service() {
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
+    private val _soundboardClips = MutableStateFlow<List<SoundboardClip>>(emptyList())
+    val soundboardClips: StateFlow<List<SoundboardClip>> = _soundboardClips.asStateFlow()
+
+    private val _isSoundboardPlaying = MutableStateFlow(false)
+    val isSoundboardPlaying: StateFlow<Boolean> = _isSoundboardPlaying.asStateFlow()
+
+    private val _currentPlayingClipName = MutableStateFlow<String?>(null)
+    val currentPlayingClipName: StateFlow<String?> = _currentPlayingClipName.asStateFlow()
 
     inner class LocalBinder : Binder() {
         fun getService(): MicrophoneStreamService = this@MicrophoneStreamService
@@ -142,6 +152,11 @@ class MicrophoneStreamService : Service() {
                         }
                     }
                 )
+                client.onSoundboardSyncReceived = { syncData ->
+                    _soundboardClips.value = syncData.clips
+                    _isSoundboardPlaying.value = syncData.isPlaying
+                    _currentPlayingClipName.value = syncData.currentPlayingClipName
+                }
                 protocolClient = client
 
                 val connectResult = client.connect(timeoutMs = 5000)
@@ -185,11 +200,20 @@ class MicrophoneStreamService : Service() {
                 _streamState.value = StreamState.STREAMING
                 updateNotification()
 
+                // Background frame receiver loop (handles Soundboard sync, Pong RTT, Heartbeats)
+                val receiverJob = serviceScope.launch(Dispatchers.IO) {
+                    client.runFrameReceiverLoop()
+                }
+
+                // Immediately request current soundboard clips from PC
+                client.sendSoundboardAction("sync")
+
                 // Ping loop
                 pingJob = serviceScope.launch(Dispatchers.IO) {
                     while (isActive && client.isConnected) {
                         delay(2000)
                         client.sendPing()
+                        _rttMs.value = client.lastRttMs
                     }
                 }
 
@@ -223,11 +247,15 @@ class MicrophoneStreamService : Service() {
                     }
                 } catch (_: Exception) {
                 } finally {
+                    receiverJob.cancel()
                     meterJob.cancel()
                     pingJob?.cancel()
                     engine.stop()
                     client.disconnect()
                     _micPeakLevel.value = 0f
+                    _soundboardClips.value = emptyList()
+                    _isSoundboardPlaying.value = false
+                    _currentPlayingClipName.value = null
                 }
 
                 if (isExplicitlyStopped) {
@@ -259,6 +287,9 @@ class MicrophoneStreamService : Service() {
 
         _streamState.value = StreamState.IDLE
         _micPeakLevel.value = 0f
+        _soundboardClips.value = emptyList()
+        _isSoundboardPlaying.value = false
+        _currentPlayingClipName.value = null
 
         if (wakeLock?.isHeld == true) {
             wakeLock?.release()
@@ -266,6 +297,24 @@ class MicrophoneStreamService : Service() {
 
         stopForegroundNotification()
         stopSelf()
+    }
+
+    fun playSoundboardClip(clipId: String) {
+        serviceScope.launch(Dispatchers.IO) {
+            protocolClient?.sendSoundboardAction("play", clipId)
+        }
+    }
+
+    fun stopSoundboardPlayback() {
+        serviceScope.launch(Dispatchers.IO) {
+            protocolClient?.sendSoundboardAction("stop", null)
+        }
+    }
+
+    fun requestSoundboardSync() {
+        serviceScope.launch(Dispatchers.IO) {
+            protocolClient?.sendSoundboardAction("sync")
+        }
     }
 
     fun toggleMute() {

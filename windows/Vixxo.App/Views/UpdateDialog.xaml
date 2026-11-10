@@ -1,0 +1,96 @@
+<Window x:Class="Vixxo.App.Views.UpdateDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Vixxo Update Available"
+        Height="500" Width="520"
+        MinHeight="460" MinWidth="480"
+        Background="{StaticResource BgBrush}"
+        Foreground="{StaticResource TextPrimaryBrush}"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Icon="../Assets/app.ico">
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" /> <!-- Header -->
+            <RowDefinition Height="Auto" /> <!-- Version Comparison -->
+            <RowDefinition Height="*" />    <!-- Release Notes Scroll -->
+            <RowDefinition Height="Auto" /> <!-- Progress Bar Section -->
+            <RowDefinition Height="Auto" /> <!-- Action Buttons -->
+        </Grid.RowDefinitions>
+
+        <!-- 1. HEADER -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="🚀" FontSize="22" Margin="0,0,10,0" VerticalAlignment="Center" />
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Software Update Available" FontSize="18" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" />
+                    <TextBlock Text="A new version of Vixxo is ready to download and install." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0" />
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- 2. VERSION BADGES & TITLE -->
+        <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10" Margin="0,0,0,14">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Vertical">
+                    <TextBlock x:Name="ReleaseTitleTextBlock" Text="Vixxo New Release" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,6" TextTrimming="CharacterEllipsis" />
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Background="{StaticResource SurfaceSubtleBrush}" BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,6,0">
+                            <TextBlock x:Name="CurrentVersionTextBlock" Text="Current: v2.0.0" FontSize="11" Foreground="{StaticResource TextMutedBrush}" FontFamily="Consolas" />
+                        </Border>
+                        <TextBlock Text="➔" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,6,0" VerticalAlignment="Center" />
+                        <Border Background="{StaticResource AccentSubtleBrush}" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2">
+                            <TextBlock x:Name="LatestVersionTextBlock" Text="Latest: v2.1.0" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" FontFamily="Consolas" />
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+                <TextBlock x:Name="ReleaseDateTextBlock" Grid.Column="1" Text="Today" FontSize="11" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+
+        <!-- 3. CHANGELOG BOX -->
+        <Border Grid.Row="2" Background="{StaticResource SurfaceSubtleBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,14">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <TextBlock x:Name="ChangelogTextBlock" 
+                           Text="No changelog provided." 
+                           TextWrapping="Wrap" 
+                           FontSize="12" 
+                           LineHeight="18"
+                           Foreground="{StaticResource TextSecondaryBrush}" />
+            </ScrollViewer>
+        </Border>
+
+        <!-- 4. PROGRESS BAR SECTION (VISIBLE WHEN DOWNLOADING) -->
+        <StackPanel x:Name="ProgressSection" Grid.Row="3" Margin="0,0,0,14" Visibility="Collapsed">
+            <Grid Margin="0,0,0,6">
+                <TextBlock x:Name="ProgressStatusTextBlock" Text="Downloading update..." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" />
+                <TextBlock x:Name="ProgressPercentageTextBlock" Text="0%" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Right" />
+            </Grid>
+            <ProgressBar x:Name="DownloadProgressBar" Height="8" Minimum="0" Maximum="100" Value="0" 
+                         Foreground="{StaticResource AccentBrush}" Background="{StaticResource SurfaceBrush}" BorderThickness="0" />
+        </StackPanel>
+
+        <!-- 5. ACTION BUTTONS -->
+        <Grid Grid.Row="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Status message (e.g. error or info) -->
+            <TextBlock x:Name="ErrorMessageTextBlock" Text="" FontSize="11" Foreground="{StaticResource DangerBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+
+            <!-- Buttons -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button x:Name="CancelButton" Content="Cancel" Click="OnCancelClick" Style="{StaticResource OutlinedButtonStyle}" Padding="14,6" Margin="0,0,8,0" Visibility="Collapsed" />
+                <Button x:Name="LaterButton" Content="Remind Me Later" Click="OnLaterClick" Style="{StaticResource OutlinedButtonStyle}" Padding="14,6" Margin="0,0,8,0" />
+                <Button x:Name="UpdateNowButton" Content="🚀 Update Now" Click="OnUpdateNowClick" Style="{StaticResource PrimaryButtonStyle}" Padding="18,6" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+models/base/contentvec/pytorch_model.bin
+models/base/predictors/rmvpe.pt
+models/characters/default/default.pth
+models/characters/default/default.index
+models/characters/miku/miku.pth
+test_audio/*.wav
+!test_audio/reference.wav
+!test_audio/input_speech.wav

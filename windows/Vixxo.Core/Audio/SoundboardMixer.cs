@@ -263,6 +263,19 @@ public sealed class SoundboardMixer
         }
     }
 
+    public bool UpdateClipShortcut(string clipId, string shortcutKey)
+    {
+        lock (_lock)
+        {
+            var clip = _clips.FirstOrDefault(c => c.Id == clipId);
+            if (clip == null) return false;
+
+            clip.ShortcutKey = shortcutKey ?? string.Empty;
+            SaveClips();
+            return true;
+        }
+    }
+
     private void LoadClips()
     {
         lock (_lock)

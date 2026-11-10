@@ -1,5 +1,6 @@
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
+using Vixxo.Core.Audio.Ipc;
 
 namespace Vixxo.Core.Audio;
 
@@ -29,6 +30,20 @@ public sealed class WasapiAudioRenderer : IDisposable
     private float _formantShift = 0f;
     private float _indexRate = 0.75f;
     private string? _customModelPath = null;
+    private AiVoiceProcessor? _aiVoiceProcessor = null;
+    private readonly VoiceChangerProcessor _fallbackVoiceChanger = new(48000);
+
+    public VoiceChangerProcessor VoiceChanger => _waveProvider?.VoiceChanger ?? _fallbackVoiceChanger;
+
+    public AiVoiceProcessor? AiVoiceProcessor
+    {
+        get => _aiVoiceProcessor;
+        set
+        {
+            _aiVoiceProcessor = value;
+            if (_waveProvider != null) _waveProvider.AiVoiceProcessor = value;
+        }
+    }
 
     public bool IsVoiceChangerEnabled
     {
@@ -212,6 +227,7 @@ public sealed class WasapiAudioRenderer : IDisposable
             _waveProvider.VoiceChanger.FormantShift = _formantShift;
             _waveProvider.VoiceChanger.IndexRate = _indexRate;
             _waveProvider.VoiceChanger.CustomModelPath = _customModelPath;
+            _waveProvider.AiVoiceProcessor = _aiVoiceProcessor;
 
             try
             {

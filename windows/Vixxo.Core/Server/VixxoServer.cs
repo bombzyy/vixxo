@@ -46,6 +46,9 @@ public sealed class VixxoServer : IAsyncDisposable
     public event Action<string>? ClientDisconnected;
     public event Action<ulong, int>? AudioFrameReceived; // seq, bytes
     public event Action<string>? LogMessage;
+    public event Action<string>? SoundboardPlayRequested;
+    public event Action? SoundboardStopRequested;
+    public event Action? ClientReadyForSoundboardSync;
 
     public VixxoServer(CircularJitterBuffer jitterBuffer, int port = 47800, IPAddress? listenAddress = null)
     {
@@ -292,6 +295,7 @@ public sealed class VixxoServer : IAsyncDisposable
             await writer.WriteJsonAsync(MessageType.Welcome, welcome, ct).ConfigureAwait(false);
             Log($"Sent WELCOME. Session started.");
             ClientConnected?.Invoke(hello.ClientName);
+            ClientReadyForSoundboardSync?.Invoke();
 
             // Step 4: Stream Loop
             _jitterBuffer.Reset();
@@ -354,6 +358,7 @@ public sealed class VixxoServer : IAsyncDisposable
                         _jitterBuffer.Reset();
         _monitorJitterBuffer?.Reset();
                         State = ServerState.Streaming;
+                        ClientReadyForSoundboardSync?.Invoke();
                         break;
 
                     case MessageType.Control:
@@ -361,6 +366,27 @@ public sealed class VixxoServer : IAsyncDisposable
                         if (control != null)
                         {
                             Log($"Received CONTROL: Action={control.Action}, Muted={control.IsMuted}, Gain={control.GainDb}");
+                        }
+                        break;
+
+                    case MessageType.SoundboardAction:
+                        var sbAction = ProtocolJson.Deserialize<SoundboardActionPayload>(payload);
+                        if (sbAction != null)
+                        {
+                            Log($"Received SOUNDBOARD_ACTION: Action={sbAction.Action}, ClipId={sbAction.ClipId}");
+                            if (sbAction.Action.Equals("play", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(sbAction.ClipId))
+                            {
+                                SoundboardPlayRequested?.Invoke(sbAction.ClipId);
+                            }
+                            else if (sbAction.Action.Equals("stop", StringComparison.OrdinalIgnoreCase))
+                            {
+                                SoundboardStopRequested?.Invoke();
+                            }
+                            else if (sbAction.Action.Equals("sync", StringComparison.OrdinalIgnoreCase))
+                            {
+                                Log("Received Soundboard sync request from client, broadcasting clips.");
+                                ClientReadyForSoundboardSync?.Invoke();
+                            }
                         }
                         break;
 
@@ -416,6 +442,27 @@ public sealed class VixxoServer : IAsyncDisposable
 
         _jitterBuffer.Reset();
         _monitorJitterBuffer?.Reset();
+    }
+
+    public async Task BroadcastSoundboardSyncAsync(SoundboardSyncPayload payload, CancellationToken ct = default)
+    {
+        VixxoFrameWriter? writer;
+        lock (_stateLock)
+        {
+            writer = _activeWriter;
+        }
+
+        if (writer != null)
+        {
+            try
+            {
+                await writer.WriteJsonAsync(MessageType.SoundboardSync, payload, ct).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                Log($"Failed to broadcast SoundboardSync: {ex.Message}");
+            }
+        }
     }
 
     private void Log(string message)

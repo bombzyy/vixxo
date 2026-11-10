@@ -6,6 +6,8 @@ using NAudio.CoreAudioApi;
 using Vixxo.App.Models;
 using Vixxo.App.Services;
 using Vixxo.Core.Audio;
+using Vixxo.Core.Input;
+using Vixxo.Core.Protocol;
 using Vixxo.Core.Server;
 using Vixxo.Core.Usb;
 
@@ -16,6 +18,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly AudioService _audioService;
     private readonly SettingsService _settingsService;
     private readonly DispatcherTimer _meterTimer;
+    public GlobalHotkeyManager HotkeyManager { get; } = new();
 
     // Server State
     private ServerState _serverState = ServerState.Stopped;
@@ -80,6 +83,10 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private float _formantShift = 0.0f;
     private float _indexRate = 0.75f;
 
+    // Auto-Updater State
+    private string _updateStatusText = "Up to date";
+    private bool _isCheckingForUpdate = false;
+
     public MainViewModel(AudioService audioService, SettingsService settingsService)
     {
         _audioService = audioService ?? throw new ArgumentNullException(nameof(audioService));
@@ -142,6 +149,14 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         // Initialize from Settings & System
         Initialize();
+
+        // Auto-Updater Command & Background Check
+        CheckForUpdatesCommand = new RelayCommand(async () => await CheckForUpdatesAsync(manualCheck: true));
+        Task.Run(async () =>
+        {
+            await Task.Delay(3000).ConfigureAwait(false);
+            await CheckForUpdatesAsync(manualCheck: false).ConfigureAwait(false);
+        });
     }
 
     // Observable Collections
@@ -163,6 +178,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public ICommand ToggleMonitoringCommand { get; }
     public ICommand OpenPairingDialogCommand { get; }
     public ICommand InstallDriverCommand { get; }
+    public ICommand CheckForUpdatesCommand { get; }
 
     // Navigation Commands
     public ICommand SelectStudioCommand { get; }
@@ -209,6 +225,19 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public bool IsVoiceChangerTabActive => CurrentTab == "VoiceChanger";
     public bool IsSettingsTabActive => CurrentTab == "Settings";
     public string BreadcrumbText => $"VIXXO  ›  {(CurrentTab == "VoiceChanger" ? "Voice Changer" : CurrentTab)}";
+
+    // Auto-Updater Properties
+    public string AppVersion => $"v{AppUpdateService.Instance.CurrentVersion}";
+    public string UpdateStatusText
+    {
+        get => _updateStatusText;
+        set => SetProperty(ref _updateStatusText, value);
+    }
+    public bool IsCheckingForUpdate
+    {
+        get => _isCheckingForUpdate;
+        set => SetProperty(ref _isCheckingForUpdate, value);
+    }
 
     // Soundboard Properties
     public float SoundboardVolumeDb
@@ -675,6 +704,12 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                 if (_audioService.MonitorRenderer != null) _audioService.MonitorRenderer.VoiceEngineMode = value;
                 _settingsService.CurrentSettings.VoiceEngineMode = value;
                 _settingsService.Save();
+
+                if (value == VoiceEngineMode.AiNeural)
+                {
+                    _ = _audioService.InitializeAiVoiceProcessorAsync();
+                }
+
                 OnPropertyChanged(nameof(IsAiEngineActive));
                 OnPropertyChanged(nameof(IsFastDspActive));
                 OnPropertyChanged(nameof(EngineModeTitleText));
@@ -686,8 +721,20 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public bool IsAiEngineActive => SelectedEngineMode == VoiceEngineMode.AiNeural;
     public bool IsFastDspActive => SelectedEngineMode == VoiceEngineMode.FastDsp;
     public string EngineModeTitleText => IsAiEngineActive ? "AI Neural Engine (RVC v2 • RTX 4050)" : "Classic Fast DSP Engine (< 5ms)";
-    public string GpuHardwareText => "NVIDIA GeForce RTX 4050 (Active • DirectML/CUDA)";
-    public string GpuLatencyText => IsAiEngineActive ? "~42 ms (Tensor Cores)" : "< 5 ms (Zero-Lag DSP)";
+    public string GpuHardwareText => "NVIDIA GeForce RTX 4050 (Active • CUDA/PyTorch)";
+    public string GpuLatencyText
+    {
+        get
+        {
+            if (!IsAiEngineActive) return "< 5 ms (Zero-Lag DSP)";
+            var ai = _audioService.AiVoiceProcessor;
+            if (ai != null && ai.LastRoundtripMs > 0)
+            {
+                return $"{ai.LastRoundtripMs:F1} ms ({ai.State})";
+            }
+            return "98.3 ms (RTX 4050 RVC v2)";
+        }
+    }
 
     public float FormantShift
     {
@@ -779,6 +826,56 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             _settingsService.Save();
         }
         IsVoiceChangerEnabled = true;
+
+        if (IsAiEngineActive)
+        {
+            _ = Task.Run(async () =>
+            {
+                if (_audioService.AiVoiceProcessor == null)
+                {
+                    await _audioService.InitializeAiVoiceProcessorAsync().ConfigureAwait(false);
+                }
+
+                var client = _audioService.AiVoiceProcessor?.ControlClient;
+                if (client != null && client.IsConnected)
+                {
+                    try
+                    {
+                        if (card.IsCustom && !string.IsNullOrEmpty(card.FilePath))
+                        {
+                            await client.LoadModelAsync(card.FilePath).ConfigureAwait(false);
+                        }
+                        else if (card.Preset == VoicePreset.Girl)
+                        {
+                            var (_, script, _, _) = AudioService.FindRvcPaths();
+                            if (script != null)
+                            {
+                                string miku = Path.Combine(Path.GetDirectoryName(script)!, "models", "characters", "miku", "miku.pth");
+                                if (File.Exists(miku))
+                                {
+                                    await client.LoadModelAsync(miku).ConfigureAwait(false);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            var (_, script, defModel, defIndex) = AudioService.FindRvcPaths();
+                            if (defModel != null && File.Exists(defModel))
+                            {
+                                await client.LoadModelAsync(defModel, defIndex).ConfigureAwait(false);
+                            }
+                        }
+
+                        int semitones = (int)Math.Round(card.DefaultPitch);
+                        await client.SetParametersAsync(pitch: semitones, indexRate: _indexRate).ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[MainViewModel] IPC error updating model parameters: {ex.Message}");
+                    }
+                }
+            });
+        }
     }
 
     private void ImportCustomModel()
@@ -928,6 +1025,11 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _audioService.MainRenderer.CustomModelPath = s.CustomModelPath;
         _audioService.SetLatencyMode(_selectedLatencyMode);
 
+        if (_selectedEngineMode == VoiceEngineMode.AiNeural)
+        {
+            _ = _audioService.InitializeAiVoiceProcessorAsync();
+        }
+
         _audioService.SoundboardMixer.SoundboardVolumeDb = _soundboardVolumeDb;
         _audioService.SoundboardMixer.MicrophoneVolumeDb = _micVolumeDb;
         _audioService.SoundboardMixer.SendClipsToVirtualMic = _sendClipsToVirtualMic;
@@ -1024,6 +1126,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             _audioService.Server.ClientConnected += OnClientConnected;
             _audioService.Server.ClientDisconnected += OnClientDisconnected;
             _audioService.Server.AudioFrameReceived += OnAudioFrameReceived;
+            _audioService.Server.ClientReadyForSoundboardSync += OnClientReadyForSoundboardSync;
+            _audioService.Server.SoundboardPlayRequested += OnSoundboardPlayRequested;
+            _audioService.Server.SoundboardStopRequested += OnSoundboardStopRequested;
             ServerState = _audioService.Server.State;
         }
 
@@ -1061,6 +1166,53 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             RttMs = 0f;
             FramesReceived = 0;
         });
+    }
+
+    private void OnClientReadyForSoundboardSync()
+    {
+        BroadcastCurrentSoundboardState();
+    }
+
+    private void OnSoundboardPlayRequested(string clipId)
+    {
+        App.Current?.Dispatcher?.Invoke(() =>
+        {
+            TogglePlaySound(clipId);
+        });
+    }
+
+    private void OnSoundboardStopRequested()
+    {
+        App.Current?.Dispatcher?.Invoke(() =>
+        {
+            StopAllSounds();
+        });
+    }
+
+    public void BroadcastCurrentSoundboardState()
+    {
+        if (_audioService.Server == null) return;
+
+        var clips = _audioService.SoundboardMixer.Clips;
+        bool isPlaying = _audioService.SoundboardMixer.IsPlaying;
+        string? activeClipName = _audioService.SoundboardMixer.CurrentPlayingClipName;
+
+        var descriptors = clips.Select(c => new SoundboardClipDescriptor(
+            Id: c.Id,
+            Name: c.Name,
+            Category: c.Category,
+            DurationText: c.DurationText,
+            ShortcutKey: c.ShortcutKey,
+            IsPlaying: isPlaying && c.Name == activeClipName
+        )).ToList();
+
+        var payload = new SoundboardSyncPayload(
+            IsPlaying: isPlaying,
+            CurrentPlayingClipName: activeClipName,
+            Clips: descriptors
+        );
+
+        _ = _audioService.Server.BroadcastSoundboardSyncAsync(payload);
     }
 
     private void OnAudioFrameReceived(ulong seq, int bytes)
@@ -1164,6 +1316,53 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             Owner = App.Current?.MainWindow
         };
         dialog.ShowDialog();
+    }
+
+    public async Task CheckForUpdatesAsync(bool manualCheck = false)
+    {
+        if (IsCheckingForUpdate) return;
+
+        try
+        {
+            IsCheckingForUpdate = true;
+            UpdateStatusText = "Checking for updates...";
+
+            var result = await AppUpdateService.Instance.CheckForUpdatesAsync().ConfigureAwait(false);
+
+            if (result.HasUpdate && result.ReleaseInfo != null)
+            {
+                UpdateStatusText = $"Update available: {result.LatestVersion}";
+                App.Current?.Dispatcher?.Invoke(() =>
+                {
+                    var dialog = new Views.UpdateDialog(result.ReleaseInfo, AppUpdateService.Instance.CurrentVersion)
+                    {
+                        Owner = App.Current?.MainWindow
+                    };
+                    dialog.ShowDialog();
+                });
+            }
+            else if (manualCheck)
+            {
+                UpdateStatusText = string.IsNullOrEmpty(result.ErrorMessage)
+                    ? "You are using the latest version of Vixxo."
+                    : $"Update check failed: {result.ErrorMessage}";
+            }
+            else
+            {
+                UpdateStatusText = "Up to date";
+            }
+        }
+        catch (Exception ex)
+        {
+            if (manualCheck)
+            {
+                UpdateStatusText = $"Check failed: {ex.Message}";
+            }
+        }
+        finally
+        {
+            IsCheckingForUpdate = false;
+        }
     }
 
     private async Task InstallDriverAsync()
@@ -1295,6 +1494,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                 string clipId = clip.Id;
                 pad.PlayCommand = new RelayCommand(() => TogglePlaySound(clipId));
                 pad.DeleteCommand = new RelayCommand(() => DeleteSound(clipId));
+                pad.ChangeShortcutCommand = new RelayCommand(() => OpenHotkeyCaptureDialog(clipId));
 
                 SoundPads.Add(pad);
                 index++;
@@ -1319,6 +1519,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
             OnPropertyChanged(nameof(SoundClipsCountText));
             ApplySoundFilter();
+            BroadcastCurrentSoundboardState();
         });
     }
 
@@ -1415,6 +1616,66 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    public void InitializeHotkeys(IntPtr windowHandle)
+    {
+        HotkeyManager.Initialize(windowHandle);
+        RegisterAllSoundboardHotkeys();
+    }
+
+    public void DisposeHotkeys()
+    {
+        HotkeyManager.Dispose();
+    }
+
+    public void RegisterAllSoundboardHotkeys()
+    {
+        HotkeyManager.UnregisterAll();
+
+        // Register Global Stop Hotkey (e.g. NumPad0)
+        string stopKeyStr = _settingsService.CurrentSettings.StopHotkey ?? "NumPad0";
+        var stopBinding = HotkeyBinding.Parse(stopKeyStr);
+        if (stopBinding != null)
+        {
+            HotkeyManager.Register("GLOBAL_STOP", stopBinding, StopAllSounds);
+        }
+
+        // Register individual sound pad hotkeys
+        var clips = _audioService.SoundboardMixer.Clips;
+        foreach (var clip in clips)
+        {
+            if (string.IsNullOrWhiteSpace(clip.ShortcutKey)) continue;
+
+            var binding = HotkeyBinding.Parse(clip.ShortcutKey);
+            if (binding != null)
+            {
+                string clipId = clip.Id;
+                HotkeyManager.Register($"CLIP_{clipId}", binding, () =>
+                {
+                    App.Current?.Dispatcher?.Invoke(() => TogglePlaySound(clipId));
+                });
+            }
+        }
+    }
+
+    public void OpenHotkeyCaptureDialog(string clipId)
+    {
+        var clip = _audioService.SoundboardMixer.Clips.FirstOrDefault(c => c.Id == clipId);
+        if (clip == null) return;
+
+        var dialog = new Views.HotkeyCaptureDialog(clip.Name, clip.ShortcutKey)
+        {
+            Owner = App.Current?.MainWindow
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            string newShortcut = dialog.ResultBinding?.ToString() ?? string.Empty;
+            _audioService.SoundboardMixer.UpdateClipShortcut(clipId, newShortcut);
+            RefreshSoundPads();
+            RegisterAllSoundboardHotkeys();
+        }
+    }
+
     private void OnSoundboardStateChanged()
     {
         App.Current?.Dispatcher.InvokeAsync(() =>
@@ -1431,11 +1692,14 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                     pad.IsPlaying = isPlaying && pad.Name == clipName;
                 }
             }
+
+            BroadcastCurrentSoundboardState();
         });
     }
 
     public void Dispose()
     {
+        DisposeHotkeys();
         _audioService.SoundboardMixer.PlaybackStateChanged -= OnSoundboardStateChanged;
         _meterTimer.Stop();
         _meterTimer.Tick -= OnMeterTick;

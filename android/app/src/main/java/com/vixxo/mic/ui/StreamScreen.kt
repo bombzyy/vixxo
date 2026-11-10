@@ -4,10 +4,12 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +32,7 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Usb
@@ -52,6 +55,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -66,10 +70,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vixxo.mic.R
 import com.vixxo.mic.discovery.DiscoveredServer
+import com.vixxo.mic.network.SoundboardClip
 import com.vixxo.mic.service.StreamState
 import kotlin.math.sin
 
@@ -94,7 +101,13 @@ fun StreamScreen(
     discoveredServers: List<DiscoveredServer>,
     isDiscovering: Boolean,
     onDiscoverClick: () -> Unit,
-    scannedQrPayload: String?
+    scannedQrPayload: String?,
+    soundboardClips: List<SoundboardClip> = emptyList(),
+    isSoundboardPlaying: Boolean = false,
+    currentPlayingClipName: String? = null,
+    onPlaySoundboardClip: (String) -> Unit = {},
+    onStopSoundboardPlayback: () -> Unit = {},
+    onRequestSoundboardSync: () -> Unit = {}
 ) {
     var hostText by remember { mutableStateOf(initialHost) }
     var portText by remember { mutableStateOf(initialPort.toString()) }
@@ -102,6 +115,15 @@ fun StreamScreen(
     var pinnedFingerprint by remember { mutableStateOf<String?>(null) }
     var gainDb by remember { mutableFloatStateOf(initialGainDb) }
     var showDiscoveryDialog by remember { mutableStateOf(false) }
+    var selectedTab by remember { mutableIntStateOf(0) } // 0 = Microphone, 1 = Soundboard
+    var selectedCategory by remember { mutableStateOf("All") }
+
+    // Auto-request soundboard sync whenever soundboard tab is selected or streaming connects
+    LaunchedEffect(selectedTab, streamState) {
+        if (selectedTab == 1 && streamState == StreamState.STREAMING) {
+            onRequestSoundboardSync()
+        }
+    }
 
     // When QR code is scanned, parse JSON payload
     LaunchedEffect(scannedQrPayload) {
@@ -209,8 +231,93 @@ fun StreamScreen(
         }
 
         // =========================================================
-        // 2. HERO REAL-TIME AUDIO VISUALIZER CARD
+        // NAVIGATION SWITCHER: [🎤 Microphone] | [🎵 Soundboard]
         // =========================================================
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(VixxoSurface)
+                .border(1.dp, VixxoBorder, RoundedCornerShape(12.dp))
+                .padding(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            // Tab 0: Microphone
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (selectedTab == 0) VixxoSurfaceElevated else Color.Transparent)
+                    .border(
+                        if (selectedTab == 0) 1.dp else 0.dp,
+                        if (selectedTab == 0) VixxoBorderLight else Color.Transparent,
+                        RoundedCornerShape(8.dp)
+                    )
+                    .clickable { selectedTab = 0 }
+                    .padding(vertical = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Mic,
+                        contentDescription = null,
+                        tint = if (selectedTab == 0) VixxoAccent else VixxoTextSecondary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Microphone",
+                        fontSize = 13.sp,
+                        fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Medium,
+                        color = if (selectedTab == 0) VixxoTextPrimary else VixxoTextSecondary
+                    )
+                }
+            }
+
+            // Tab 1: Soundboard
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (selectedTab == 1) VixxoSurfaceElevated else Color.Transparent)
+                    .border(
+                        if (selectedTab == 1) 1.dp else 0.dp,
+                        if (selectedTab == 1) VixxoBorderLight else Color.Transparent,
+                        RoundedCornerShape(8.dp)
+                    )
+                    .clickable { selectedTab = 1 }
+                    .padding(vertical = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "🎵",
+                        fontSize = 13.sp
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = if (soundboardClips.isNotEmpty()) "Soundboard (${soundboardClips.size})" else "Soundboard",
+                        fontSize = 13.sp,
+                        fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Medium,
+                        color = if (selectedTab == 1) VixxoTextPrimary else VixxoTextSecondary
+                    )
+                    if (isSoundboardPlaying) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .clip(CircleShape)
+                                .background(VixxoSuccess)
+                        )
+                    }
+                }
+            }
+        }
+
+        if (selectedTab == 0) {
+            // =========================================================
+            // 2. HERO REAL-TIME AUDIO VISUALIZER CARD
+            // =========================================================
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = VixxoSurface),
@@ -685,6 +792,294 @@ fun StreamScreen(
                 fontWeight = FontWeight.SemiBold
             )
         }
+        } else {
+            // =========================================================
+            // SOUNDBOARD STREAM DECK MOBILE TAB
+            // =========================================================
+            if (!isStreaming) {
+                // Not connected to PC
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = VixxoSurface),
+                    shape = RoundedCornerShape(18.dp),
+                    border = BorderStroke(1.dp, VixxoBorder)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp)
+                                .clip(CircleShape)
+                                .background(VixxoSurfaceElevated)
+                                .border(1.dp, VixxoBorderLight, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = "📡", fontSize = 28.sp)
+                        }
+
+                        Text(
+                            text = "Connect to PC First",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = VixxoTextPrimary
+                        )
+
+                        Text(
+                            text = "Soundboard clips configured in Vixxo Studio on your Windows PC sync here automatically in real time. Connect to your PC over Wi-Fi or USB to use your phone as a Stream Deck.",
+                            fontSize = 13.sp,
+                            color = VixxoTextSecondary,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 18.sp
+                        )
+
+                        Button(
+                            onClick = { selectedTab = 0 },
+                            colors = ButtonDefaults.buttonColors(containerColor = VixxoAccent),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.PlayArrow,
+                                    contentDescription = null,
+                                    tint = Color(0xFF060D1A)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Go to Connect Screen",
+                                    color = Color(0xFF060D1A),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Connected & streaming: Live Soundboard Stream Deck
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isSoundboardPlaying) VixxoAccentSubtle.copy(alpha = 0.5f) else VixxoSurface
+                    ),
+                    shape = RoundedCornerShape(18.dp),
+                    border = BorderStroke(
+                        1.dp,
+                        if (isSoundboardPlaying) VixxoAccent.copy(alpha = 0.6f) else VixxoBorder
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .clip(CircleShape)
+                                        .background(if (isSoundboardPlaying) VixxoSuccess else VixxoTextMuted)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = if (isSoundboardPlaying) "NOW PLAYING ON PC" else "SOUNDBOARD READY",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSoundboardPlaying) VixxoSuccess else VixxoTextSecondary,
+                                    letterSpacing = 0.5.sp
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = if (isSoundboardPlaying && !currentPlayingClipName.isNullOrBlank()) {
+                                    currentPlayingClipName
+                                } else {
+                                    "Tap any sound pad below"
+                                },
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Black,
+                                color = if (isSoundboardPlaying) VixxoAccent else VixxoTextPrimary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        // Quick Sync Button
+                        OutlinedButton(
+                            onClick = onRequestSoundboardSync,
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, VixxoBorderLight),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = VixxoAccent),
+                            modifier = Modifier.height(40.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Sync",
+                                tint = VixxoAccent,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(6.dp))
+
+                        // Stop All Button
+                        Button(
+                            onClick = onStopSoundboardPlayback,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = VixxoError.copy(alpha = 0.2f),
+                                contentColor = VixxoError
+                            ),
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, VixxoError),
+                            modifier = Modifier.height(40.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Stop,
+                                    contentDescription = "Stop",
+                                    tint = VixxoError,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "STOP",
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 12.sp,
+                                    color = VixxoError
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Category Filter Chips
+                val categories = remember(soundboardClips) {
+                    val rawCats = soundboardClips.map { it.category.trim() }.filter { it.isNotBlank() }.distinct()
+                    listOf("All") + rawCats
+                }
+
+                if (categories.size > 2) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        categories.forEach { cat ->
+                            val isSelected = cat == selectedCategory
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(if (isSelected) VixxoAccentSubtle else VixxoSurface)
+                                    .border(
+                                        1.dp,
+                                        if (isSelected) VixxoAccent else VixxoBorder,
+                                        RoundedCornerShape(20.dp)
+                                    )
+                                    .clickable { selectedCategory = cat }
+                                    .padding(horizontal = 14.dp, vertical = 6.dp)
+                            ) {
+                                Text(
+                                    text = cat,
+                                    fontSize = 12.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) VixxoAccent else VixxoTextSecondary
+                                )
+                            }
+                        }
+                    }
+                }
+
+                val filteredClips = remember(soundboardClips, selectedCategory) {
+                    if (selectedCategory == "All") soundboardClips
+                    else soundboardClips.filter { it.category.trim() == selectedCategory }
+                }
+
+                if (filteredClips.isEmpty()) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = VixxoSurface),
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(1.dp, VixxoBorder)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(text = "🎵", fontSize = 32.sp)
+                            Text(
+                                text = "No Sound Clips Found",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = VixxoTextPrimary
+                            )
+                            Text(
+                                text = "Open Vixxo on your PC, click 'Add Sound' in the Soundboard tab, and your sound clips will appear here instantly.",
+                                fontSize = 12.sp,
+                                color = VixxoTextSecondary,
+                                textAlign = TextAlign.Center
+                            )
+                            Button(
+                                onClick = onRequestSoundboardSync,
+                                colors = ButtonDefaults.buttonColors(containerColor = VixxoAccent),
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.padding(top = 8.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Refresh,
+                                        contentDescription = null,
+                                        tint = Color(0xFF060D1A),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "Sync Sounds from PC",
+                                        color = Color(0xFF060D1A),
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // 2-column Sound Pad Grid
+                    val chunkedRows = filteredClips.chunked(2)
+                    chunkedRows.forEach { rowClips ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            rowClips.forEach { clip ->
+                                Box(modifier = Modifier.weight(1f)) {
+                                    SoundPadCard(
+                                        clip = clip,
+                                        onClick = { onPlaySoundboardClip(clip.id) }
+                                    )
+                                }
+                            }
+                            if (rowClips.size == 1) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     // =========================================================
@@ -806,6 +1201,129 @@ fun StudioVisualizerCanvas(
                 size = Size(barWidth, barHeight),
                 cornerRadius = CornerRadius(2.dp.toPx(), 2.dp.toPx())
             )
+        }
+    }
+}
+
+/**
+ * Tactical Stream Deck Sound Pad Card
+ */
+@Composable
+fun SoundPadCard(
+    clip: SoundboardClip,
+    onClick: () -> Unit
+) {
+    val isPlaying = clip.isPlaying
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isPlaying) VixxoAccentSubtle else VixxoSurface
+        ),
+        border = BorderStroke(
+            if (isPlaying) 1.5.dp else 1.dp,
+            if (isPlaying) VixxoAccent else VixxoBorder
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Category pill
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(VixxoSurfaceElevated)
+                        .padding(horizontal = 5.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = clip.category.ifBlank { "GENERAL" }.uppercase(),
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = VixxoTextMuted,
+                        maxLines = 1
+                    )
+                }
+
+                // Duration text
+                Text(
+                    text = clip.durationText,
+                    fontSize = 10.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = VixxoTextSecondary
+                )
+            }
+
+            // Clip Name
+            Text(
+                text = clip.name,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (isPlaying) VixxoAccent else VixxoTextPrimary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                lineHeight = 16.sp,
+                modifier = Modifier.height(34.dp)
+            )
+
+            // Bottom bar: Hotkey + Indicator
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (clip.shortcutKey.isNotBlank()) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(VixxoSurfaceElevated)
+                            .border(1.dp, VixxoBorderLight, RoundedCornerShape(4.dp))
+                            .padding(horizontal = 4.dp, vertical = 1.dp)
+                    ) {
+                        Text(
+                            text = clip.shortcutKey,
+                            fontSize = 9.sp,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.SemiBold,
+                            color = VixxoAccentHover
+                        )
+                    }
+                } else {
+                    Spacer(modifier = Modifier.width(1.dp))
+                }
+
+                if (isPlaying) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .clip(CircleShape)
+                                .background(VixxoSuccess)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "PLAYING",
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Black,
+                            color = VixxoSuccess
+                        )
+                    }
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "Play",
+                        tint = VixxoTextMuted,
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
+            }
         }
     }
 }

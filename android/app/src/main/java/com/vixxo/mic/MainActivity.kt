@@ -23,6 +23,7 @@ import com.journeyapps.barcodescanner.ScanOptions
 import com.vixxo.mic.audio.AudioCaptureEngine
 import com.vixxo.mic.discovery.DiscoveredServer
 import com.vixxo.mic.discovery.UdpDiscoveryClient
+import com.vixxo.mic.network.SoundboardClip
 import com.vixxo.mic.service.MicrophoneStreamService
 import com.vixxo.mic.service.StreamState
 import com.vixxo.mic.ui.StreamScreen
@@ -50,6 +51,11 @@ class MainActivity : ComponentActivity() {
     private val _serverName = MutableStateFlow("")
     private val _isMuted = MutableStateFlow(false)
     private val _errorMessage = MutableStateFlow<String?>(null)
+
+    // Remote Soundboard State
+    private val _soundboardClips = MutableStateFlow<List<SoundboardClip>>(emptyList())
+    private val _isSoundboardPlaying = MutableStateFlow(false)
+    private val _currentPlayingClipName = MutableStateFlow<String?>(null)
 
     // QR Scanning & LAN Discovery State
     private val _scannedQrPayload = mutableStateOf<String?>(null)
@@ -93,6 +99,15 @@ class MainActivity : ComponentActivity() {
                 lifecycleScope.launch {
                     svc.errorMessage.collect { _errorMessage.value = it }
                 }
+                lifecycleScope.launch {
+                    svc.soundboardClips.collect { _soundboardClips.value = it }
+                }
+                lifecycleScope.launch {
+                    svc.isSoundboardPlaying.collect { _isSoundboardPlaying.value = it }
+                }
+                lifecycleScope.launch {
+                    svc.currentPlayingClipName.collect { _currentPlayingClipName.value = it }
+                }
             }
         }
 
@@ -100,6 +115,9 @@ class MainActivity : ComponentActivity() {
             streamService = null
             isBound = false
             _streamState.value = StreamState.IDLE
+            _soundboardClips.value = emptyList()
+            _isSoundboardPlaying.value = false
+            _currentPlayingClipName.value = null
         }
     }
 
@@ -142,6 +160,10 @@ class MainActivity : ComponentActivity() {
 
                 val discoveredList by _discoveredServers.collectAsState()
                 val isDiscoveringVal by _isDiscovering.collectAsState()
+
+                val soundboardClipsVal by _soundboardClips.collectAsState()
+                val isSoundboardPlayingVal by _isSoundboardPlaying.collectAsState()
+                val currentPlayingClipNameVal by _currentPlayingClipName.collectAsState()
 
                 StreamScreen(
                     streamState = streamStateVal,
@@ -192,7 +214,19 @@ class MainActivity : ComponentActivity() {
                     onDiscoverClick = {
                         triggerDiscovery()
                     },
-                    scannedQrPayload = _scannedQrPayload.value
+                    scannedQrPayload = _scannedQrPayload.value,
+                    soundboardClips = soundboardClipsVal,
+                    isSoundboardPlaying = isSoundboardPlayingVal,
+                    currentPlayingClipName = currentPlayingClipNameVal,
+                    onPlaySoundboardClip = { clipId ->
+                        streamService?.playSoundboardClip(clipId)
+                    },
+                    onStopSoundboardPlayback = {
+                        streamService?.stopSoundboardPlayback()
+                    },
+                    onRequestSoundboardSync = {
+                        streamService?.requestSoundboardSync()
+                    }
                 )
             }
         }

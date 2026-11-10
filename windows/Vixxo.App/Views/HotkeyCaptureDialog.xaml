@@ -1,0 +1,82 @@
+<Window x:Class="Vixxo.App.Views.HotkeyCaptureDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Assign Hotkey — Vixxo"
+        Height="340" Width="440"
+        MinHeight="300" MinWidth="400"
+        Background="{StaticResource BgBrush}"
+        Foreground="{StaticResource TextPrimaryBrush}"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Icon="../Assets/app.ico">
+
+    <Grid Margin="22">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" /> <!-- Header -->
+            <RowDefinition Height="*" />    <!-- Key Display Card -->
+            <RowDefinition Height="Auto" /> <!-- Action Buttons -->
+        </Grid.RowDefinitions>
+
+        <!-- 1. HEADER -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="⌨️" FontSize="20" Margin="0,0,8,0" VerticalAlignment="Center" />
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock x:Name="SoundNameTextBlock" Text="Assign Hotkey" FontSize="16" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" />
+                    <TextBlock Text="Press any single key or key combination" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0" />
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- 2. CAPTURE DISPLAY CARD -->
+        <Border Grid.Row="1" Background="{StaticResource SurfaceElevatedBrush}" BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,16">
+            <Grid VerticalAlignment="Center">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- Active Modifier Badges -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
+                    <Border x:Name="CtrlBadge" Background="{StaticResource SurfaceSubtleBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="7,3" Margin="0,0,6,0">
+                        <TextBlock x:Name="CtrlText" Text="CTRL" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" FontFamily="Consolas" />
+                    </Border>
+                    <Border x:Name="AltBadge" Background="{StaticResource SurfaceSubtleBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="7,3" Margin="0,0,6,0">
+                        <TextBlock x:Name="AltText" Text="ALT" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" FontFamily="Consolas" />
+                    </Border>
+                    <Border x:Name="ShiftBadge" Background="{StaticResource SurfaceSubtleBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="7,3" Margin="0,0,6,0">
+                        <TextBlock x:Name="ShiftText" Text="SHIFT" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" FontFamily="Consolas" />
+                    </Border>
+                    <Border x:Name="WinBadge" Background="{StaticResource SurfaceSubtleBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="7,3">
+                        <TextBlock x:Name="WinText" Text="WIN" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" FontFamily="Consolas" />
+                    </Border>
+                </StackPanel>
+
+                <!-- Captured Hotkey Display -->
+                <TextBlock x:Name="KeyDisplayTextBlock" Grid.Row="1" Text="Press a key..." FontSize="22" FontWeight="Black" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center" Margin="0,4,0,10" FontFamily="Consolas" />
+
+                <!-- Helper Tip -->
+                <TextBlock Grid.Row="2" Text="Works globally in games (Valorant, CS2) &amp; background apps." FontSize="10" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" />
+            </Grid>
+        </Border>
+
+        <!-- 3. ACTIONS -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Clear Hotkey Button -->
+            <Button Content="Clear Shortcut" Click="OnClearClick" Style="{StaticResource OutlinedButtonStyle}" Padding="12,6" FontSize="11" />
+
+            <!-- Save / Cancel -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                <Button Content="Cancel" Click="OnCancelClick" Style="{StaticResource OutlinedButtonStyle}" Padding="14,6" Margin="0,0,8,0" FontSize="11" />
+                <Button x:Name="SaveButton" Content="Assign Hotkey" Click="OnSaveClick" Style="{StaticResource PrimaryButtonStyle}" Padding="16,6" FontSize="11" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

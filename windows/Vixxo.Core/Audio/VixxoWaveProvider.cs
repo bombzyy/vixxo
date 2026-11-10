@@ -1,6 +1,7 @@
 using System.Buffers.Binary;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
+using Vixxo.Core.Audio.Ipc;
 
 namespace Vixxo.Core.Audio;
 
@@ -23,6 +24,7 @@ public sealed class VixxoWaveProvider : IWaveProvider
 
     public AudioDspProcessor DspProcessor { get; }
     public VoiceChangerProcessor VoiceChanger { get; }
+    public AiVoiceProcessor? AiVoiceProcessor { get; set; }
     public bool IsMonitorOutput { get; set; } = false;
     public SoundboardMixer? SoundboardMixer { get; set; }
 
@@ -147,8 +149,18 @@ public sealed class VixxoWaveProvider : IWaveProvider
         // Apply DSP (HPF 80 Hz + Noise Gate)
         DspProcessor.ProcessMono(_floatScratchBuffer.AsSpan(0, framesRequested));
 
-        // Apply Real-Time Voice Changer (Girl, Lady, Demon, Robot, Radio, etc.)
-        VoiceChanger.ProcessMono(_floatScratchBuffer.AsSpan(0, framesRequested));
+        // Apply Real-Time Voice Changer (AI Neural or Fast DSP)
+        if (VoiceChanger.IsEnabled)
+        {
+            if (VoiceChanger.EngineMode == VoiceEngineMode.AiNeural && AiVoiceProcessor != null)
+            {
+                AiVoiceProcessor.ProcessMono(_floatScratchBuffer.AsSpan(0, framesRequested));
+            }
+            else
+            {
+                VoiceChanger.ProcessMono(_floatScratchBuffer.AsSpan(0, framesRequested));
+            }
+        }
 
         // Mix soundboard clips before Limiter & Output gain
         if (IsMonitorOutput)
