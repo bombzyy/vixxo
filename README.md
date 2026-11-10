@@ -14,7 +14,7 @@
 <br/>
 
 🌐 **Official 3D SaaS Landing Page:**  
-👉 **[https://vixxo-1m6.pages.dev/](https://vixxo-1m6.pages.dev/)**
+👉 **[https://vixxostudio.pages.dev/](https://vixxostudio.pages.dev/)**
 
 <br/>
 
