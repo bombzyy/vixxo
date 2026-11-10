@@ -114,8 +114,21 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         // Navigation Commands
         SelectStudioCommand = new RelayCommand(() => CurrentTab = "Studio");
         SelectSoundboardCommand = new RelayCommand(() => CurrentTab = "Soundboard");
+        SelectMarketplaceCommand = new RelayCommand(() =>
+        {
+            CurrentTab = "Marketplace";
+            if (MarketplaceSounds.Count == 0)
+            {
+                _ = LoadMarketplaceSoundsAsync();
+            }
+        });
         SelectVoiceChangerCommand = new RelayCommand(() => CurrentTab = "VoiceChanger");
         SelectSettingsCommand = new RelayCommand(() => CurrentTab = "Settings");
+
+        // Marketplace Commands
+        RefreshMarketplaceCommand = new RelayCommand(async () => await LoadMarketplaceSoundsAsync());
+        StopMarketplacePreviewCommand = new RelayCommand(() => MarketplaceService.Instance.StopPreview());
+        MarketplaceService.Instance.PlaybackStateChanged += OnMarketplacePlaybackStateChanged;
 
         // Soundboard Commands
         StopAllSoundsCommand = new RelayCommand(StopAllSounds);
@@ -183,8 +196,11 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     // Navigation Commands
     public ICommand SelectStudioCommand { get; }
     public ICommand SelectSoundboardCommand { get; }
+    public ICommand SelectMarketplaceCommand { get; }
     public ICommand SelectVoiceChangerCommand { get; }
     public ICommand SelectSettingsCommand { get; }
+    public ICommand RefreshMarketplaceCommand { get; }
+    public ICommand StopMarketplacePreviewCommand { get; }
 
     // Soundboard Commands
     public ICommand StopAllSoundsCommand { get; }
@@ -213,6 +229,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             {
                 OnPropertyChanged(nameof(IsStudioTabActive));
                 OnPropertyChanged(nameof(IsSoundboardTabActive));
+                OnPropertyChanged(nameof(IsMarketplaceTabActive));
                 OnPropertyChanged(nameof(IsVoiceChangerTabActive));
                 OnPropertyChanged(nameof(IsSettingsTabActive));
                 OnPropertyChanged(nameof(BreadcrumbText));
@@ -222,9 +239,10 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public bool IsStudioTabActive => CurrentTab == "Studio";
     public bool IsSoundboardTabActive => CurrentTab == "Soundboard";
+    public bool IsMarketplaceTabActive => CurrentTab == "Marketplace";
     public bool IsVoiceChangerTabActive => CurrentTab == "VoiceChanger";
     public bool IsSettingsTabActive => CurrentTab == "Settings";
-    public string BreadcrumbText => $"VIXXO  ›  {(CurrentTab == "VoiceChanger" ? "Voice Changer" : CurrentTab)}";
+    public string BreadcrumbText => $"VIXXO  ›  {(CurrentTab == "VoiceChanger" ? "Voice Changer" : CurrentTab == "Marketplace" ? "Sound Library & Marketplace" : CurrentTab)}";
 
     // Auto-Updater Properties
     public string AppVersion => $"v{AppUpdateService.Instance.CurrentVersion}";
@@ -1697,9 +1715,188 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         });
     }
 
+    // =========================================================================
+    // SOUND MARKETPLACE & ONLINE SOUND LIBRARY
+    // =========================================================================
+    public ObservableCollection<MarketplaceSoundViewModel> MarketplaceSounds { get; } = new();
+    public ObservableCollection<MarketplaceSoundViewModel> FilteredMarketplaceSounds { get; } = new();
+    public ObservableCollection<string> MarketplaceCategories { get; } = new()
+    {
+        "All Packs", "Valorant", "Memes", "Gaming", "Anime", "Streamer SFX"
+    };
+
+    private string _marketplaceSearchText = "";
+    public string MarketplaceSearchText
+    {
+        get => _marketplaceSearchText;
+        set
+        {
+            if (SetProperty(ref _marketplaceSearchText, value))
+            {
+                FilterMarketplaceSounds();
+            }
+        }
+    }
+
+    private string _selectedMarketplaceCategory = "All Packs";
+    public string SelectedMarketplaceCategory
+    {
+        get => _selectedMarketplaceCategory;
+        set
+        {
+            if (SetProperty(ref _selectedMarketplaceCategory, value))
+            {
+                FilterMarketplaceSounds();
+            }
+        }
+    }
+
+    private bool _isLoadingMarketplace = false;
+    public bool IsLoadingMarketplace
+    {
+        get => _isLoadingMarketplace;
+        set => SetProperty(ref _isLoadingMarketplace, value);
+    }
+
+    private string _marketplaceStatusMessage = "Ready to download online sound packs";
+    public string MarketplaceStatusMessage
+    {
+        get => _marketplaceStatusMessage;
+        set => SetProperty(ref _marketplaceStatusMessage, value);
+    }
+
+    private void OnMarketplacePlaybackStateChanged(string? soundId, bool isPlaying)
+    {
+        App.Current?.Dispatcher.InvokeAsync(() =>
+        {
+            foreach (var item in MarketplaceSounds)
+            {
+                item.IsPlaying = isPlaying && item.Id == soundId;
+            }
+        });
+    }
+
+    public async Task LoadMarketplaceSoundsAsync()
+    {
+        if (IsLoadingMarketplace) return;
+
+        IsLoadingMarketplace = true;
+        MarketplaceStatusMessage = "Connecting to online sound library...";
+
+        try
+        {
+            var rawSounds = await MarketplaceService.Instance.LoadCatalogAsync();
+
+            await App.Current?.Dispatcher.InvokeAsync(() =>
+            {
+                MarketplaceSounds.Clear();
+                foreach (var sound in rawSounds)
+                {
+                    var vm = new MarketplaceSoundViewModel
+                    {
+                        Id = sound.Id,
+                        Title = sound.Title,
+                        Category = sound.Category,
+                        Badge = sound.Badge,
+                        Duration = sound.Duration,
+                        Desc = sound.Desc,
+                        AudioPath = sound.AudioPath,
+                        Icon = sound.Icon,
+                        IsDownloaded = MarketplaceService.Instance.IsSoundDownloaded(sound)
+                    };
+
+                    vm.PreviewCommand = new RelayCommand(() => MarketplaceService.Instance.PlayPreview(vm.Id, vm.AudioPath));
+                    vm.DownloadCommand = new RelayCommand(async () => await DownloadMarketplaceSoundAsync(vm));
+
+                    MarketplaceSounds.Add(vm);
+                }
+
+                FilterMarketplaceSounds();
+                MarketplaceStatusMessage = $"{MarketplaceSounds.Count} online sound packs available";
+            })!;
+        }
+        catch (Exception ex)
+        {
+            MarketplaceStatusMessage = $"Marketplace load error: {ex.Message}";
+        }
+        finally
+        {
+            IsLoadingMarketplace = false;
+        }
+    }
+
+    public void FilterMarketplaceSounds()
+    {
+        FilteredMarketplaceSounds.Clear();
+
+        string query = MarketplaceSearchText?.Trim().ToLowerInvariant() ?? "";
+        string cat = SelectedMarketplaceCategory ?? "All Packs";
+
+        foreach (var sound in MarketplaceSounds)
+        {
+            bool matchesCat = cat == "All Packs" || sound.Category.Equals(cat, StringComparison.OrdinalIgnoreCase);
+            bool matchesSearch = string.IsNullOrWhiteSpace(query) ||
+                                 sound.Title.ToLowerInvariant().Contains(query) ||
+                                 sound.Category.ToLowerInvariant().Contains(query) ||
+                                 sound.Desc.ToLowerInvariant().Contains(query);
+
+            if (matchesCat && matchesSearch)
+            {
+                FilteredMarketplaceSounds.Add(sound);
+            }
+        }
+    }
+
+    public async Task DownloadMarketplaceSoundAsync(MarketplaceSoundViewModel soundVm)
+    {
+        if (soundVm.IsDownloading) return;
+
+        soundVm.IsDownloading = true;
+        soundVm.StatusText = "Downloading...";
+        MarketplaceStatusMessage = $"Downloading {soundVm.Title}...";
+
+        try
+        {
+            var model = new MarketplaceSound
+            {
+                Id = soundVm.Id,
+                Title = soundVm.Title,
+                Category = soundVm.Category,
+                Badge = soundVm.Badge,
+                Duration = soundVm.Duration,
+                Desc = soundVm.Desc,
+                AudioPath = soundVm.AudioPath,
+                Icon = soundVm.Icon
+            };
+
+            string localPath = await MarketplaceService.Instance.DownloadSoundAsync(model);
+
+            int nextKey = _audioService.SoundboardMixer.Clips.Count + 1;
+            string shortcut = nextKey <= 9 ? nextKey.ToString() : "";
+
+            _audioService.SoundboardMixer.AddClip(soundVm.Title, localPath, shortcut, soundVm.Category);
+
+            RefreshSoundPads();
+
+            soundVm.IsDownloaded = true;
+            soundVm.StatusText = "✓ Added!";
+            MarketplaceStatusMessage = $"Added \"{soundVm.Title}\" to Soundboard & synced to phone!";
+        }
+        catch (Exception ex)
+        {
+            soundVm.StatusText = "Failed";
+            MarketplaceStatusMessage = $"Download failed: {ex.Message}";
+        }
+        finally
+        {
+            soundVm.IsDownloading = false;
+        }
+    }
+
     public void Dispose()
     {
         DisposeHotkeys();
+        MarketplaceService.Instance.PlaybackStateChanged -= OnMarketplacePlaybackStateChanged;
         _audioService.SoundboardMixer.PlaybackStateChanged -= OnSoundboardStateChanged;
         _meterTimer.Stop();
         _meterTimer.Tick -= OnMeterTick;
