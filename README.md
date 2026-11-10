@@ -122,7 +122,70 @@ Most wireless microphone solutions suffer from major drawbacks:
 
 ## 🏗️ System Architecture (v2.0.1)
 
-\\	ext
+```mermaid
+flowchart TD
+    subgraph Android["📱 ANDROID PHONE (Vixxo Client)"]
+        Mic["🎙️ Diaphragm / AudioRecord (48kHz Mono PCM)"]
+        Meter["📊 Float RMS VU Meter"]
+        Framer["📦 Vixxo Framing Stream (0x56495858 Magic + 20ms Chunks)"]
+        StreamDeck["📱 Stream Deck Mobile UI (2-Column Tactical Pads)"]
+        
+        Mic --> Meter
+        Mic --> Framer
+    end
+
+    subgraph Transport["⚡ HIGH-SPEED TRANSPORT"]
+        USB["🔌 USB Cable (ADB Reverse Loopback: tcp:47800) • < 5ms"]
+        WiFi["📡 Wi-Fi LAN / Hotspot (TCP / TLS 1.3 AES-256) • 8-15ms"]
+    end
+
+    subgraph Windows["💻 WINDOWS PC (Vixxo Studio Core)"]
+        Reader["📥 Vixxo Frame Reader Engine"]
+        Jitter["🔄 Adaptive Circular Jitter Buffer (20/50/100ms)"]
+        Drift["⏱️ Real-Time Clock Drift Compensator"]
+        DSP["🛡️ Studio DSP (80Hz HPF + Noise Gate + Limiter)"]
+        
+        subgraph VoiceChanger["🤖 AI Neural Voice & Fast DSP Engine"]
+            NetPipe["Audio Thread (.NET 8)"]
+            ShmRing["SPSC Lock-Free Shared Memory"]
+            PyWorker["Python PyTorch RVC v2 CUDA Worker (68.4ms P95)"]
+            DspFallback["Auto-Crossfade DSP Fallback Engine"]
+            
+            NetPipe --> ShmRing --> PyWorker --> DspFallback
+        end
+
+        subgraph Soundboard["🎛️ Studio Soundboard Mixer"]
+            Mixer["Multi-Clip 48kHz Mixing Engine"]
+            Hotkeys["⌨️ Win32 Global Hotkeys (WM_HOTKEY)"]
+            Marketplace["🛒 Online Sound Library & Marketplace"]
+            
+            Hotkeys --> Mixer
+            Marketplace --> Mixer
+        end
+
+        Wasapi["🔊 WASAPI Audio Renderer (Shared Mode)"]
+        CableIn["🎚️ CABLE Input (VB-Audio Virtual Cable)"]
+    end
+
+    subgraph Output["🎙️ VIRTUAL MICROPHONE OUTPUT"]
+        CableOut["🎤 CABLE Output (Virtual Studio Microphone)"]
+        Apps["🎮 Discord • OBS Studio • Valorant • Zoom / Teams • Audacity / DAW"]
+    end
+
+    Framer --> USB & WiFi
+    USB & WiFi --> Reader
+    StreamDeck <-->|"Bi-Directional TCP Sync (0x0E / 0x0F)"| Soundboard
+    
+    Reader --> Jitter --> Drift --> DSP --> VoiceChanger --> Soundboard
+    Soundboard --> Wasapi --> CableIn
+    CableIn ==>|"Bit-Perfect Virtual Link"| CableOut
+    CableOut --> Apps
+```
+
+<details>
+<summary><b>📐 Click to expand ASCII Flow Diagram</b></summary>
+
+```text
 ┌──────────────────────────────────────────────────────────────────────────────────┐
 │                             ANDROID PHONE (Vixxo Client)                         │
 │                                                                                  │
@@ -191,7 +254,9 @@ Most wireless microphone solutions suffer from major drawbacks:
 │         ▼                    ▼                    ▼                   ▼          │
 │   [Discord Voice]      [OBS Studio Mic]      [Zoom / Teams]     [Audacity / DAW] │
 └──────────────────────────────────────────────────────────────────────────────────┘
-\
+```
+
+</details>
 ---
 
 ## 📊 Performance Benchmarks
