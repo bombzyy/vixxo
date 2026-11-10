@@ -49,8 +49,9 @@ Most wireless microphone solutions suffer from major drawbacks:
 
 | Platform | Download Link | Description | Size |
 | :--- | :--- | :--- | :--- |
-| **Windows 10 / 11** | [**Download Vixxo-Setup-x64.exe (v2.0.0)**](https://github.com/bombzyy/vixxo/releases/download/v2.0.0/Vixxo-Setup-x64.exe) | Complete standalone x64 installer (**Bundled with RVC AI Neural models, Global Hotkeys, & VB-CABLE driver**) | `541 MB` |
+| **Windows 10 / 11** | [**Download Vixxo-Setup-x64.exe (v2.0.0)**](https://github.com/bombzyy/vixxo/releases/download/v2.0.0/Vixxo-Setup-x64.exe) | Complete standalone x64 installer (**Bundled with RVC AI Neural models, Global Hotkeys, & VB-CABLE driver**) | `516 MB` |
 | **Android 8.0+** | [**Download Vixxo-Mobile-v2.0.0.apk**](https://github.com/bombzyy/vixxo/releases/download/v2.0.0/Vixxo-Mobile-v2.0.0.apk) | Full Stream Deck Mobile & Microphone client (Jetpack Compose, background streaming service) | `19.5 MB` |
+| **Android 8.0+ (Alias)** | [**Download vixxo-android-release.apk**](https://github.com/bombzyy/vixxo/releases/download/v2.0.0/vixxo-android-release.apk) | Backwards-compatibility alias for v2.0.0 Android package | `19.5 MB` |
 | **Virtual Driver** | **Auto-Bundled in Setup** | VB-CABLE is automatically installed by the setup wizard or via 1-click in-app button | Built-in |
 
 ---
@@ -113,54 +114,78 @@ Most wireless microphone solutions suffer from major drawbacks:
 
 ---
 
-## 🏗️ System Architecture
+## 🏗️ System Architecture (v2.0.0)
 
-```text
-┌────────────────────────────────────────────────────────────────────────┐
-│                          ANDROID PHONE (Vixxo)                         │
-│                                                                        │
-│   [Diaphragm] ──▶ [AudioRecord API @ 48kHz] ──▶ [Float RMS Meter]     │
-│                             │                                          │
-│                             ▼                                          │
-│                  [Vixxo Framing Stream]                                │
-│          (0x56495858 Magic + Sequence + 20ms Chunks)                   │
-└─────────────────────────────────┬──────────────────────────────────────┘
-                                  │
-                                  │  USB Cable (adb reverse loopback)
-                                  │  OR Wi-Fi LAN / Hotspot (TCP/TLS)
-                                  ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│                        WINDOWS PC (Vixxo Server)                       │
-│                                                                        │
-│                    [Vixxo Frame Reader Engine]                         │
-│                             │                                          │
-│                             ▼                                          │
-│                    [Circular Jitter Buffer]                            │
-│                             │                                          │
-│                             ▼                                          │
-│                    [Drift Compensator]                                 │
-│                             │                                          │
-│                             ▼                                          │
-│                [DSP: HPF 80Hz + Noise Gate + Limiter]                  │
-│                             │                                          │
-│                             ▼                                          │
-│             [WASAPI Audio Renderer (Shared Mode)]                      │
-│                             │                                          │
-│                             ▼                                          │
-│                  [CABLE Input (VB-CABLE)]                              │
-└─────────────────────────────┬──────────────────────────────────────────┘
-                              │
-                              │ (Internal Virtual Audio Link)
-                              ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│                 [CABLE Output (Virtual Microphone)]                    │
-│                                                                        │
-│         ┌─────────────────┬─────────────────┬────────────────┐         │
-│         ▼                 ▼                 ▼                ▼         │
-│   [Discord Voice]   [OBS Studio Mic]   [Zoom / Teams]   [Audacity/DAW] │
-└────────────────────────────────────────────────────────────────────────┘
-```
-
+\\	ext
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                             ANDROID PHONE (Vixxo Client)                         │
+│                                                                                  │
+│   [Diaphragm] ──▶ [AudioRecord API @ 48kHz] ──▶ [Float RMS Meter]               │
+│                                │                                                 │
+│                                ▼                                                 │
+│                     [Vixxo Framing Stream]                                       │
+│             (0x56495858 Magic + Sequence + 20ms Chunks)                          │
+│                                │                                                 │
+│   [Stream Deck Mobile UI] ◀────┼─────────────────────────────────────────────┐   │
+│   • 2-Column Tactical Pads     │ (TCP Control Channel: Sync 0x0E/0x0F)       │   │
+│   • Real-Time Active Glow      ▼                                             │   │
+└────────────────────────────────┬─────────────────────────────────────────────┼───┘
+                                 │                                             │
+                                 │  USB Cable (adb reverse loopback)           │
+                                 │  OR Wi-Fi LAN / Hotspot (TCP/TLS 1.3)       │
+                                 ▼                                             ▼
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                           WINDOWS PC (Vixxo Studio Core)                         │
+│                                                                                  │
+│                     [Vixxo Frame Reader Engine]                                  │
+│                                │                                                 │
+│                                ▼                                                 │
+│                     [Circular Jitter Buffer]                                     │
+│                                │                                                 │
+│                                ▼                                                 │
+│                     [Drift Compensator]                                          │
+│                                │                                                 │
+│                                ▼                                                 │
+│             [DSP Pipeline: HPF 80Hz + Noise Gate + Limiter]                      │
+│                                │                                                 │
+│                                ▼                                                 │
+│         ┌──────────────────────────────────────────────┐                         │
+│         │     AI NEURAL VOICE ENGINE (RVC v2 + CUDA)   │                         │
+│         │                                              │                         │
+│         │  [.NET 8 Audio Thread]                       │                         │
+│         │           │                                  │                         │
+│         │           ▼ (SPSC Lock-Free Shared Memory)   │                         │
+│         │  [Python PyTorch RVC v2 CUDA Worker]         │                         │
+│         │           │ (68.4 ms P95 Inference)          │                         │
+│         │           ▼                                  │                         │
+│         │  [Auto-Crossfade DSP Fallback Engine]        │                         │
+│         └──────────────────────┬───────────────────────┘                         │
+│                                │                                                 │
+│                                ▼                                                 │
+│         ┌──────────────────────────────────────────────┐                         │
+│         │           STUDIO SOUNDBOARD MIXER            │◀── [Win32 WM_HOTKEY]    │
+│         │  • Multi-Clip Concurrent Audio Mixing        │    (Global Background)  │
+│         │  • Phone Soundboard TCP Sync Engine          │                         │
+│         │  • Dynamic Re-sampling to 48kHz Mono         │◀── [Remote Phone Touch] │
+│         └──────────────────────┬───────────────────────┘                         │
+│                                │                                                 │
+│                                ▼                                                 │
+│              [WASAPI Audio Renderer (Shared Mode)]                               │
+│                                │                                                 │
+│                                ▼                                                 │
+│                     [CABLE Input (VB-CABLE)]                                     │
+└────────────────────────────────┬─────────────────────────────────────────────────┘
+                                 │
+                                 │ (Internal Bit-Perfect Virtual Audio Link)
+                                 ▼
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                    [CABLE Output (Virtual Studio Microphone)]                    │
+│                                                                                  │
+│         ┌────────────────────┬────────────────────┬───────────────────┐          │
+│         ▼                    ▼                    ▼                   ▼          │
+│   [Discord Voice]      [OBS Studio Mic]      [Zoom / Teams]     [Audacity / DAW] │
+└──────────────────────────────────────────────────────────────────────────────────┘
+\
 ---
 
 ## 📊 Performance Benchmarks
@@ -170,6 +195,11 @@ Most wireless microphone solutions suffer from major drawbacks:
 | **Audio Latency** | **< 5 ms** ⚡ | **8 – 15 ms** | 150 – 250 ms | 60 – 180 ms |
 | **Audio Sample Rate** | **48 kHz / 16-bit** | **48 kHz / 16-bit** | 8 – 16 kHz | Lossy compressed |
 | **Audio Format** | **Uncompressed PCM** | **Uncompressed PCM** | Telephone Speex/mSBC | Lossy OPUS / AAC |
+| **Remote Soundboard** | **Included (Stream Deck)** | **Included (Stream Deck)** | None ( Hardware) | None |
+| **AI Voice Changer** | **RVC v2 (68ms CUDA)** | **RVC v2 + DSP** | None | None / Paid only |
+| **Global Background Hotkeys** | **Win32 Native (0ms theft)** | **Win32 Native** | None | None |
+| **In-App Auto Updater** | **Automated (GitHub Releases)** | **Automated** | None | Manual web search |
+| **Unit Test Coverage** | **83 / 83 Verified** 🛡️ | **83 / 83 Verified** | N/A | Unverified |
 | **Router AP Isolation** | **100% Immune** | Hotspot Fallback | N/A | Fails completely |
 | **DSP Filters** | **Gate + Limiter + HPF** | **Gate + Limiter + HPF** | None | None / Paid only |
 | **Privacy / Cloud** | **100% Local** | **100% Local** | Local | Cloud telemetry / Ads |
@@ -180,13 +210,13 @@ Most wireless microphone solutions suffer from major drawbacks:
 ## ⚡ Quickstart Guide
 
 ### 1. Windows Setup
-1. Download and run [**`Vixxo-Setup-x64.exe`**](https://github.com/bombzyy/vixxo/releases/download/v1.0.0/Vixxo-Setup-x64.exe).
+1. Download and run [**`Vixxo-Setup-x64.exe`**](https://github.com/bombzyy/vixxo/releases/download/v2.0.0/Vixxo-Setup-x64.exe).
 2. The setup wizard **automatically detects and silently installs the VB-CABLE driver** if it isn't already on your system! *(If skipped or uninstalled later, a **1-Click "Install Audio Driver"** button is built right into the app).*
 3. Launch **Vixxo** from your Start menu or desktop shortcut.
 4. Verify that the Virtual Microphone Routing dropdown shows **`CABLE Input (VB-Audio Virtual Cable)`** (auto-selected).
 
 ### 2. Android Setup
-1. Download and install [**`vixxo-android-release.apk`**](https://github.com/bombzyy/vixxo/releases/download/v1.0.0/vixxo-android-release.apk) on your phone.
+1. Download and install [**`vixxo-android-release.apk`**](https://github.com/bombzyy/vixxo/releases/download/v2.0.0/Vixxo-Mobile-v2.0.0.apk) on your phone.
 2. Open **Vixxo** on your phone and grant Microphone and Camera permissions when prompted.
 
 ### 3. Connect & Stream
@@ -243,7 +273,7 @@ If your home fiber Wi-Fi (such as JioFiber or Airtel) blocks wireless devices fr
 git clone https://github.com/bombzyy/vixxo.git
 cd vixxo
 
-# Run all 33 automated test suites
+# Run all 83 automated test suites
 dotnet test tests/Vixxo.Tests/Vixxo.Tests.csproj -c Release
 
 # Run master build pipeline (Compiles Windows x64, Inno Setup Installer, and Android APK)
