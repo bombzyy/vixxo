@@ -28,7 +28,7 @@ public sealed class AppUpdateService
         {
             return $"{ver.Major}.{ver.Minor}.{ver.Build}";
         }
-        return "2.0.0";
+        return "2.0.1";
     }
 
     public async Task<UpdateCheckResult> CheckForUpdatesAsync(CancellationToken ct = default)

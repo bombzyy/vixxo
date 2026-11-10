@@ -5,7 +5,7 @@
 ### High-Fidelity Android to Windows Virtual Microphone
 **Turn any Android phone into a studio-grade, ultra-low latency PC microphone over Wi-Fi, USB, and Hotspot.**
 
-[![Release](https://img.shields.io/badge/Release-v2.0.0-0284c7?style=for-the-badge&logo=github)](https://github.com/bombzyy/vixxo/releases/tag/v2.0.0)
+[![Release](https://img.shields.io/badge/Release-v2.0.1-0284c7?style=for-the-badge&logo=github)](https://github.com/bombzyy/vixxo/releases/tag/v2.0.1)
 [![Website](https://img.shields.io/badge/Website-Live_on_Cloudflare-38bdf8?style=for-the-badge&logo=cloudflare)](https://vixxo-1m6.pages.dev/)
 [![Platform](https://img.shields.io/badge/Platform-Windows_%7C_Android-6366f1?style=for-the-badge)](https://github.com/bombzyy/vixxo)
 [![Tests](https://img.shields.io/badge/Tests-83%2F83_Passing-10b981?style=for-the-badge)](https://github.com/bombzyy/vixxo)
@@ -49,9 +49,9 @@ Most wireless microphone solutions suffer from major drawbacks:
 
 | Platform | Download Link | Description | Size |
 | :--- | :--- | :--- | :--- |
-| **Windows 10 / 11** | [**Download Vixxo-Setup-x64.exe (v2.0.0)**](https://github.com/bombzyy/vixxo/releases/download/v2.0.0/Vixxo-Setup-x64.exe) | Complete standalone x64 installer (**Bundled with RVC AI Neural models, Global Hotkeys, & VB-CABLE driver**) | `516 MB` |
-| **Android 8.0+** | [**Download Vixxo-Mobile-v2.0.0.apk**](https://github.com/bombzyy/vixxo/releases/download/v2.0.0/Vixxo-Mobile-v2.0.0.apk) | Full Stream Deck Mobile & Microphone client (Jetpack Compose, background streaming service) | `19.5 MB` |
-| **Android 8.0+ (Alias)** | [**Download vixxo-android-release.apk**](https://github.com/bombzyy/vixxo/releases/download/v2.0.0/vixxo-android-release.apk) | Backwards-compatibility alias for v2.0.0 Android package | `19.5 MB` |
+| **Windows 10 / 11** | [**Download Vixxo-Setup-x64.exe (v2.0.1)**](https://github.com/bombzyy/vixxo/releases/download/v2.0.1/Vixxo-Setup-x64.exe) | Complete standalone x64 installer (**Bundled with Sound Marketplace, RVC AI Neural models, Global Hotkeys, & VB-CABLE driver**) | `516 MB` |
+| **Android 8.0+** | [**Download Vixxo-Mobile-v2.0.1.apk**](https://github.com/bombzyy/vixxo/releases/download/v2.0.1/Vixxo-Mobile-v2.0.1.apk) | Full Stream Deck Mobile & Microphone client (Jetpack Compose, background streaming service) | `19.5 MB` |
+| **Android 8.0+ (Alias)** | [**Download vixxo-android-release.apk**](https://github.com/bombzyy/vixxo/releases/download/v2.0.1/vixxo-android-release.apk) | Backwards-compatibility alias for v2.0.1 Android package | `19.5 MB` |
 | **Virtual Driver** | **Auto-Bundled in Setup** | VB-CABLE is automatically installed by the setup wizard or via 1-click in-app button | Built-in |
 
 ---
@@ -112,9 +112,15 @@ Most wireless microphone solutions suffer from major drawbacks:
 - **SHA-256 Certificate Pinning:** Protects against local network man-in-the-middle (MITM) attacks.
 - **Single-Use 6-Digit PIN Pairing:** Temporary pairing PINs automatically expire after 5 minutes to prevent unauthorized devices from connecting.
 
+### 10. 🛒 Online Sound Library & Community Marketplace — *NEW in v2.0.1*
+- **Cloud-Synced Curated Packs:** Browse dozens of authentic gaming sound effects (Valorant Spike Plant, Spike Defusal, ACE Riff, Headshot Dink, CS Bomb Planted, Memes, Anime, Streamer SFX) synced straight from the Cloudflare global edge CDN.
+- **In-App Audio Preview:** Test and preview sounds online before downloading.
+- **1-Click Soundboard & Phone Sync:** Downloaded clips are automatically assigned keyboard shortcuts, cached locally, and pushed instantly over bilateral TCP to the Android Stream Deck.
+- **Dynamic Category Filtering & Search:** Search sound clips in real-time or filter by categories (*Valorant, Memes, Gaming, Anime, Streamer SFX*).
+
 ---
 
-## 🏗️ System Architecture (v2.0.0)
+## 🏗️ System Architecture (v2.0.1)
 
 \\	ext
 ┌──────────────────────────────────────────────────────────────────────────────────┐

@@ -1,6 +1,6 @@
 ; Vixxo Windows Setup Script (Inno Setup 6)
 #define MyAppName "Vixxo"
-#define MyAppVersion "2.0.0"
+#define MyAppVersion "2.0.1"
 #define MyAppPublisher "Vixxo Project"
 #define MyAppURL "https://github.com/vixxo/vixxo"
 #define MyAppExeName "Vixxo.exe"

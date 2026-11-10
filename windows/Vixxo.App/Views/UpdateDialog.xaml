@@ -41,7 +41,7 @@
                     <TextBlock x:Name="ReleaseTitleTextBlock" Text="Vixxo New Release" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,6" TextTrimming="CharacterEllipsis" />
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Border Background="{StaticResource SurfaceSubtleBrush}" BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,6,0">
-                            <TextBlock x:Name="CurrentVersionTextBlock" Text="Current: v2.0.0" FontSize="11" Foreground="{StaticResource TextMutedBrush}" FontFamily="Consolas" />
+                            <TextBlock x:Name="CurrentVersionTextBlock" Text="Current: v2.0.1" FontSize="11" Foreground="{StaticResource TextMutedBrush}" FontFamily="Consolas" />
                         </Border>
                         <TextBlock Text="➔" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,6,0" VerticalAlignment="Center" />
                         <Border Background="{StaticResource AccentSubtleBrush}" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2">

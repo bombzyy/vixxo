@@ -96,7 +96,7 @@ class VixxoProtocolClient(
             // 1. Send HELLO
             val helloJson = JSONObject().apply {
                 put("clientName", clientName)
-                put("clientVersion", "1.0.0")
+                put("clientVersion", "2.0.1")
                 put("protocolVersion", 1)
                 put("deviceId", deviceId)
                 put("supportedFormats", JSONArray().apply {
