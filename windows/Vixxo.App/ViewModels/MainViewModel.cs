@@ -1834,7 +1834,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public ObservableCollection<MarketplaceSoundViewModel> FilteredMarketplaceSounds { get; } = new();
     public ObservableCollection<string> MarketplaceCategories { get; } = new()
     {
-        "All Packs", "Valorant", "Memes", "Gaming", "Anime", "Streamer SFX"
+        "All Packs", "Valorant", "Memes", "Gaming", "Anime", "Streamer SFX", "Horror"
     };
 
     private string _marketplaceSearchText = "";

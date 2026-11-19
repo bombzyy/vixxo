@@ -187,7 +187,9 @@ public sealed class MarketplaceService
 
             new() { Id = "stream-cha-ching", Title = "Cash Cha-Ching", Category = "Streamer SFX", Badge = "Donation", Duration = "1.3s", Desc = "Heavy metal register drawer opening & coin ring", AudioPath = "assets/sounds/stream/cha-ching.mp3", Icon = "dollar-sign" },
             new() { Id = "stream-level-up", Title = "Level Up Chime", Category = "Streamer SFX", Badge = "Reward", Duration = "1.6s", Desc = "Sparkling 16-bit RPG quest completion fanfare", AudioPath = "assets/sounds/stream/level-up.mp3", Icon = "award" },
-            new() { Id = "stream-wrong-buzzer", Title = "Wrong Answer Buzzer", Category = "Streamer SFX", Badge = "Fail", Duration = "1.2s", Desc = "Loud abrasive game-show failure double-buzz", AudioPath = "assets/sounds/stream/wrong-buzzer.mp3", Icon = "x-circle" }
+            new() { Id = "stream-wrong-buzzer", Title = "Wrong Answer Buzzer", Category = "Streamer SFX", Badge = "Fail", Duration = "1.2s", Desc = "Loud abrasive game-show failure double-buzz", AudioPath = "assets/sounds/stream/wrong-buzzer.mp3", Icon = "x-circle" },
+            new() { Id = "horror-jumpscare", Title = "Loud Jumpscare Shriek", Category = "Horror", Badge = "Jumpscare", Duration = "1.5s", Desc = "Ear-splitting screeching phantom face in camera", AudioPath = "assets/sounds/horror/jumpscare.mp3", Icon = "alert-octagon" },
+            new() { Id = "horror-door-creak", Title = "Haunted Door Creak", Category = "Horror", Badge = "Atmosphere", Duration = "2.1s", Desc = "Slow, rusty hinge groaning open in abandoned house", AudioPath = "assets/sounds/horror/door-creak.mp3", Icon = "home" }
         };
     }
 }
