@@ -5,10 +5,10 @@
 ### High-Fidelity Android to Windows Virtual Microphone
 **Turn any Android phone into a studio-grade, ultra-low latency PC microphone over Wi-Fi, USB, and Hotspot.**
 
-[![Release](https://img.shields.io/badge/Release-v2.0.1-0284c7?style=for-the-badge&logo=github)](https://github.com/bombzyy/vixxo/releases/tag/v2.0.1)
-[![Website](https://img.shields.io/badge/Website-Live_on_Cloudflare-38bdf8?style=for-the-badge&logo=cloudflare)](https://vixxo-1m6.pages.dev/)
+[![Release](https://img.shields.io/badge/Release-v2.1.0-0284c7?style=for-the-badge&logo=github)](https://github.com/bombzyy/vixxo/releases/tag/v2.1.0)
+[![Website](https://img.shields.io/badge/Website-Live_on_Cloudflare-38bdf8?style=for-the-badge&logo=cloudflare)](https://vixxostudio.pages.dev/)
 [![Platform](https://img.shields.io/badge/Platform-Windows_%7C_Android-6366f1?style=for-the-badge)](https://github.com/bombzyy/vixxo)
-[![Tests](https://img.shields.io/badge/Tests-83%2F83_Passing-10b981?style=for-the-badge)](https://github.com/bombzyy/vixxo)
+[![Tests](https://img.shields.io/badge/Tests-87%2F87_Passing-10b981?style=for-the-badge)](https://github.com/bombzyy/vixxo)
 [![License](https://img.shields.io/badge/License-MIT-f59e0b?style=for-the-badge)](LICENSE)
 
 <br/>
@@ -49,9 +49,9 @@ Most wireless microphone solutions suffer from major drawbacks:
 
 | Platform | Download Link | Description | Size |
 | :--- | :--- | :--- | :--- |
-| **Windows 10 / 11** | [**Download Vixxo-Setup-x64.exe (v2.0.1)**](https://github.com/bombzyy/vixxo/releases/download/v2.0.1/Vixxo-Setup-x64.exe) | Complete standalone x64 installer (**Bundled with Sound Marketplace, RVC AI Neural models, Global Hotkeys, & VB-CABLE driver**) | `516 MB` |
-| **Android 8.0+** | [**Download Vixxo-Mobile-v2.0.1.apk**](https://github.com/bombzyy/vixxo/releases/download/v2.0.1/Vixxo-Mobile-v2.0.1.apk) | Full Stream Deck Mobile & Microphone client (Jetpack Compose, background streaming service) | `19.5 MB` |
-| **Android 8.0+ (Alias)** | [**Download vixxo-android-release.apk**](https://github.com/bombzyy/vixxo/releases/download/v2.0.1/vixxo-android-release.apk) | Backwards-compatibility alias for v2.0.1 Android package | `19.5 MB` |
+| **Windows 10 / 11** | [**Download Vixxo-Setup-x64.exe (v2.1.0)**](https://github.com/bombzyy/vixxo/releases/download/v2.1.0/Vixxo-Setup-x64.exe) | Complete standalone x64 installer (**Bundled with 120+ Sound Marketplace, Local PC Mic Capture, RVC AI Neural models, Global Hotkeys, & VB-CABLE driver**) | `516 MB` |
+| **Android 8.0+** | [**Download Vixxo-Mobile-v2.1.0.apk**](https://github.com/bombzyy/vixxo/releases/download/v2.1.0/Vixxo-Mobile-v2.1.0.apk) | Full Stream Deck Mobile & Microphone client (Jetpack Compose, background streaming service) | `19.5 MB` |
+| **Android 8.0+ (Alias)** | [**Download vixxo-android-release.apk**](https://github.com/bombzyy/vixxo/releases/download/v2.1.0/vixxo-android-release.apk) | Backwards-compatibility alias for v2.1.0 Android package | `19.5 MB` |
 | **Virtual Driver** | **Auto-Bundled in Setup** | VB-CABLE is automatically installed by the setup wizard or via 1-click in-app button | Built-in |
 
 ---
