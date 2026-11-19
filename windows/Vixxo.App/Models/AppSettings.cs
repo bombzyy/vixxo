@@ -5,6 +5,8 @@ namespace Vixxo.App.Models;
 
 public sealed class AppSettings
 {
+    public AudioInputMode AudioInputMode { get; set; } = AudioInputMode.Phone;
+    public string? SelectedLocalMicDeviceId { get; set; }
     public string? SelectedPlaybackDeviceId { get; set; }
     public string? SelectedMonitorDeviceId { get; set; }
     public bool IsMonitoringEnabled { get; set; } = false;

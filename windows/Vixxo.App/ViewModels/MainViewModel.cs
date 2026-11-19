@@ -94,6 +94,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         PlaybackDevices = new ObservableCollection<AudioDeviceInfo>();
         MonitoringDevices = new ObservableCollection<AudioDeviceInfo>();
+        RecordingDevices = new ObservableCollection<AudioDeviceInfo>();
         LocalIpAddresses = new ObservableCollection<string>();
         ConnectedUsbDevices = new ObservableCollection<AdbDeviceInfo>();
         SoundPads = new ObservableCollection<SoundPadViewModel>();
@@ -133,6 +134,12 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         // Soundboard Commands
         StopAllSoundsCommand = new RelayCommand(StopAllSounds);
         AddSoundCommand = new RelayCommand(AddCustomSound);
+
+        // Input Source Commands
+        SelectPhoneInputCommand = new RelayCommand(() => AudioInputMode = AudioInputMode.Phone);
+        SelectPcMicInputCommand = new RelayCommand(() => AudioInputMode = AudioInputMode.PcMic);
+        SelectSoundboardOnlyCommand = new RelayCommand(() => AudioInputMode = AudioInputMode.SoundboardOnly);
+        RefreshRecordingDevicesCommand = new RelayCommand(RefreshDevices);
 
         // Voice Changer Commands
         SelectAiEngineCommand = new RelayCommand(() => SelectedEngineMode = VoiceEngineMode.AiNeural);
@@ -175,6 +182,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     // Observable Collections
     public ObservableCollection<AudioDeviceInfo> PlaybackDevices { get; }
     public ObservableCollection<AudioDeviceInfo> MonitoringDevices { get; }
+    public ObservableCollection<AudioDeviceInfo> RecordingDevices { get; }
     public ObservableCollection<string> LocalIpAddresses { get; }
     public ObservableCollection<AdbDeviceInfo> ConnectedUsbDevices { get; }
     public ObservableCollection<SoundPadViewModel> SoundPads { get; }
@@ -205,6 +213,12 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     // Soundboard Commands
     public ICommand StopAllSoundsCommand { get; }
     public ICommand AddSoundCommand { get; }
+
+    // Input Source Commands
+    public ICommand SelectPhoneInputCommand { get; }
+    public ICommand SelectPcMicInputCommand { get; }
+    public ICommand SelectSoundboardOnlyCommand { get; }
+    public ICommand RefreshRecordingDevicesCommand { get; }
 
     // Voice Changer Commands
     public ICommand SelectAiEngineCommand { get; }
@@ -445,6 +459,77 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                     _audioService.EnableMonitoring(value.Id);
                 }
             }
+        }
+    }
+
+    private AudioDeviceInfo? _selectedRecordingDevice;
+    public AudioDeviceInfo? SelectedRecordingDevice
+    {
+        get => _selectedRecordingDevice;
+        set
+        {
+            if (SetProperty(ref _selectedRecordingDevice, value))
+            {
+                _settingsService.CurrentSettings.SelectedLocalMicDeviceId = value?.Id;
+                _settingsService.Save();
+                if (AudioInputMode == AudioInputMode.PcMic && value != null)
+                {
+                    _audioService.SetInputMode(AudioInputMode.PcMic, value.Id);
+                    OnPropertyChanged(nameof(InputModeStatusText));
+                }
+            }
+        }
+    }
+
+    private AudioInputMode _audioInputMode = AudioInputMode.Phone;
+    public AudioInputMode AudioInputMode
+    {
+        get => _audioInputMode;
+        set
+        {
+            if (SetProperty(ref _audioInputMode, value))
+            {
+                _settingsService.CurrentSettings.AudioInputMode = value;
+                _settingsService.Save();
+                _audioService.SetInputMode(value, SelectedRecordingDevice?.Id);
+
+                OnPropertyChanged(nameof(IsPhoneInputMode));
+                OnPropertyChanged(nameof(IsPcMicInputMode));
+                OnPropertyChanged(nameof(IsSoundboardOnlyMode));
+                OnPropertyChanged(nameof(InputModeStatusText));
+            }
+        }
+    }
+
+    public bool IsPhoneInputMode
+    {
+        get => AudioInputMode == AudioInputMode.Phone;
+        set { if (value) AudioInputMode = AudioInputMode.Phone; }
+    }
+
+    public bool IsPcMicInputMode
+    {
+        get => AudioInputMode == AudioInputMode.PcMic;
+        set { if (value) AudioInputMode = AudioInputMode.PcMic; }
+    }
+
+    public bool IsSoundboardOnlyMode
+    {
+        get => AudioInputMode == AudioInputMode.SoundboardOnly;
+        set { if (value) AudioInputMode = AudioInputMode.SoundboardOnly; }
+    }
+
+    public string InputModeStatusText
+    {
+        get
+        {
+            return AudioInputMode switch
+            {
+                AudioInputMode.Phone => "Phone Microphone (Wi-Fi / USB)",
+                AudioInputMode.PcMic => $"PC Mic: {SelectedRecordingDevice?.Name ?? "No mic selected"}",
+                AudioInputMode.SoundboardOnly => "Soundboard Only (Microphone Muted)",
+                _ => "Phone Microphone"
+            };
         }
     }
 
@@ -1065,6 +1150,14 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         // Refresh devices and bind CABLE Input
         RefreshDevices();
 
+        // Restore input mode
+        _audioInputMode = s.AudioInputMode;
+        OnPropertyChanged(nameof(IsPhoneInputMode));
+        OnPropertyChanged(nameof(IsPcMicInputMode));
+        OnPropertyChanged(nameof(IsSoundboardOnlyMode));
+        OnPropertyChanged(nameof(InputModeStatusText));
+        _audioService.SetInputMode(_audioInputMode, SelectedRecordingDevice?.Id);
+
         // Start Server
         RestartServer();
 
@@ -1131,6 +1224,25 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             SelectedMonitoringDevice = MonitoringDevices.FirstOrDefault(m => m.IsDefault) ?? MonitoringDevices.FirstOrDefault();
         }
+
+        // Populate physical recording devices for Local PC Mic
+        RecordingDevices.Clear();
+        AudioDeviceInfo? recDeviceToSelect = null;
+        string? savedRecId = _settingsService.CurrentSettings.SelectedLocalMicDeviceId;
+
+        foreach (var r in recordings)
+        {
+            if (!r.IsVbCable)
+            {
+                RecordingDevices.Add(r);
+                if (savedRecId != null && string.Equals(r.Id, savedRecId, StringComparison.OrdinalIgnoreCase))
+                {
+                    recDeviceToSelect = r;
+                }
+            }
+        }
+
+        SelectedRecordingDevice = recDeviceToSelect ?? RecordingDevices.FirstOrDefault(r => r.IsDefault) ?? RecordingDevices.FirstOrDefault();
     }
 
     private void RestartServer()

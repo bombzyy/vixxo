@@ -50,6 +50,8 @@ public sealed class VixxoServer : IAsyncDisposable
     public event Action? SoundboardStopRequested;
     public event Action? ClientReadyForSoundboardSync;
 
+    public bool IsAudioStreamingEnabled { get; set; } = true;
+
     public VixxoServer(CircularJitterBuffer jitterBuffer, int port = 47800, IPAddress? listenAddress = null)
     {
         _jitterBuffer = jitterBuffer ?? throw new ArgumentNullException(nameof(jitterBuffer));
@@ -316,8 +318,11 @@ public sealed class VixxoServer : IAsyncDisposable
                                 int pcmBytes = payload.Length - AudioHeader.HeaderSize;
                                 if (pcmBytes > 0)
                                 {
-                                    _jitterBuffer.Enqueue(payload.AsSpan(AudioHeader.HeaderSize, pcmBytes));
-                                    _monitorJitterBuffer?.Enqueue(payload.AsSpan(AudioHeader.HeaderSize, pcmBytes));
+                                    if (IsAudioStreamingEnabled)
+                                    {
+                                        _jitterBuffer.Enqueue(payload.AsSpan(AudioHeader.HeaderSize, pcmBytes));
+                                        _monitorJitterBuffer?.Enqueue(payload.AsSpan(AudioHeader.HeaderSize, pcmBytes));
+                                    }
                                     _totalAudioFramesReceived++;
                                     _totalAudioBytesReceived += (ulong)pcmBytes;
                                     AudioFrameReceived?.Invoke(audioHeader.SequenceNumber, pcmBytes);

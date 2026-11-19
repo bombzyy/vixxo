@@ -29,6 +29,11 @@ public sealed class AudioService : IAsyncDisposable
     public AdbManager AdbManager { get; }
     public AdbDeviceWatcher? AdbWatcher => _adbWatcher;
     public SoundboardMixer SoundboardMixer { get; }
+    public LocalMicrophoneCapture LocalMicCapture => _localMicCapture;
+
+    private readonly LocalMicrophoneCapture _localMicCapture = new();
+    public AudioInputMode CurrentInputMode { get; private set; } = AudioInputMode.Phone;
+    public string? CurrentLocalMicDeviceId { get; private set; }
 
     public AudioService()
     {
@@ -185,6 +190,7 @@ public sealed class AudioService : IAsyncDisposable
 
             _monitorRenderer.Start(device, latencyMs);
             _server?.SetMonitorJitterBuffer(_monitorJitterBuffer);
+            _localMicCapture.SetMonitorJitterBuffer(_monitorJitterBuffer);
             return true;
         }
         catch (Exception ex)
@@ -198,6 +204,7 @@ public sealed class AudioService : IAsyncDisposable
     public void DisableMonitoring()
     {
         _server?.SetMonitorJitterBuffer(null);
+        _localMicCapture.SetMonitorJitterBuffer(null);
 
         if (_monitorRenderer != null)
         {
@@ -211,6 +218,61 @@ public sealed class AudioService : IAsyncDisposable
         }
 
         _monitorJitterBuffer = null;
+    }
+
+    public bool SetInputMode(AudioInputMode mode, string? localMicDeviceId = null)
+    {
+        CurrentInputMode = mode;
+        CurrentLocalMicDeviceId = localMicDeviceId;
+
+        switch (mode)
+        {
+            case AudioInputMode.Phone:
+                _localMicCapture.Stop();
+                if (_server != null)
+                {
+                    _server.IsAudioStreamingEnabled = true;
+                }
+                _mainJitterBuffer.Reset();
+                _monitorJitterBuffer?.Reset();
+                return true;
+
+            case AudioInputMode.PcMic:
+                if (_server != null)
+                {
+                    _server.IsAudioStreamingEnabled = false;
+                }
+                _mainJitterBuffer.Reset();
+                _monitorJitterBuffer?.Reset();
+
+                if (string.IsNullOrWhiteSpace(localMicDeviceId))
+                {
+                    _localMicCapture.Stop();
+                    return false;
+                }
+
+                var device = AudioDeviceManager.GetDeviceById(localMicDeviceId);
+                if (device == null)
+                {
+                    _localMicCapture.Stop();
+                    return false;
+                }
+
+                return _localMicCapture.Start(device, _mainJitterBuffer, _monitorJitterBuffer);
+
+            case AudioInputMode.SoundboardOnly:
+                _localMicCapture.Stop();
+                if (_server != null)
+                {
+                    _server.IsAudioStreamingEnabled = false;
+                }
+                _mainJitterBuffer.Reset();
+                _monitorJitterBuffer?.Reset();
+                return true;
+
+            default:
+                return false;
+        }
     }
 
     public void SetLatencyMode(LatencyMode mode)
@@ -392,6 +454,7 @@ public sealed class AudioService : IAsyncDisposable
         if (!_isDisposed)
         {
             _isDisposed = true;
+            _localMicCapture.Dispose();
             ShutdownAiVoiceProcessor();
             AdbManager.Dispose();
             DisableMonitoring();
